@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+
+<launch>
+
+    <!-- launch Gazebo world -->
+    <include file="$(find uuv_gazebo_worlds)/launch/mangalia.launch"/>
+
+
+    <!-- launch AUV model-->
+
+
+    <include file="$(find desistek_saga_gazebo)/launch/start_demo_nmb_sm_controller.launch">
+      <arg name="x" value="-250"/>
+      <arg name="y" value="300"/>
+      <arg name="z" value="-5"/>
+      <arg name="yaw" value="90"/>
+      <arg name="joy_id" value="0"/>
+    </include>
+
+
+
+      <!-- launch simulated sonar -->
+    <!--  <node pkg="sonar_mapping" type="sonar_simulation.py" name="sonar" output="screen"/>-->
+    <node pkg="sonar_mapping" type="sonar_simulation_dynamic.py" name="sonar_dynamic" output="screen"/>
+
+    <node pkg="sonar_mapping" type="dvl.py" name="read_dvl" output="screen"/>
+      <!-- launch conversion Laserscan - pointcloud2 -->
+    <node pkg="sonar_mapping" type="laserscan_to_poincloud.py" name="laser_to_cloud" output="screen"/>
+    <!-- converte the pointcloud into pointcloud2 -->
+    <node pkg="point_cloud_converter" name="point_cloud_converter" type="point_cloud_converter_node" >
+
+      <remap from="points2_in" to="/own/simulated/dynamic/sonar_PC2"/>
+      <remap from="points_out" to="/own/simulated/dynamic/sonar_PC" />
+
+    </node>
+
+
+
+    <!--
+    <node pkg="sonar_mapping" type="octomap_launch.py" name="en_Mapping" output="screen"/>
+    -->
+</launch>

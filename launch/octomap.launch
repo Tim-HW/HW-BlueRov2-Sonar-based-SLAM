@@ -1,0 +1,19 @@
+<launch>
+    <!-- launch Octomap -->
+    <node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
+
+      <param name="resolution" value="1.0" />
+
+      <!-- fixed map frame (set to 'map' if SLAM or localization running!) -->
+      <param name="frame_id" type="string" value="world" />
+
+      <!-- maximum range to integrate (speedup!) -->
+      <param name="sensor_model/max_range" value="75.0" />
+
+      <!-- data source to integrate (PointCloud2) -->
+      <remap from="cloud_in" to="/own/simulated/dynamic/sonar_PC2" />
+      
+    </node>
+
+
+</launch>

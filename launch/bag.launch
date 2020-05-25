@@ -1,0 +1,30 @@
+<launch>
+
+     <!-- Launch the Rosbag with the sonar in a square tank -->
+    <node pkg="rosbag" type="play" name="rosbag" output="screen" args="--loop $(find sonar_mapping)/rosbag/static_sonar.bag"/>
+    <!-- Launch the filtering that keeps only the greatest values of every range -->
+    <node pkg="sonar_mapping" type="filtering.py" name="get_data" output="screen"/>
+    <!-- converte the pointcloud into pointcloud2 -->
+    <node pkg="point_cloud_converter" name="point_cloud_converter" type="point_cloud_converter_node" >
+
+      <remap from="points_in" to="/tritech_micron/filttered_scan"/>
+      <remap from="points2_out" to="/tritech_micron/pointcloud2/filttered_scan" />
+
+    </node>
+
+    <!-- launch octomap -->
+    <node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
+
+    <param name="resolution" value="0.05" />
+
+        <!-- fixed map frame (set to 'map' if SLAM or localization running!) -->
+    <param name="frame_id" type="string" value="sonar" />
+
+        <!-- maximum range to integrate (speedup!) -->
+    <param name="sensor_model/max_range" value="5.0" />
+
+        <!-- data source to integrate (PointCloud2) -->
+    <remap from="cloud_in" to="/tritech_micron/pointcloud2/filttered_scan" />
+
+    </node>
+</launch>
