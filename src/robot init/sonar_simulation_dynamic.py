@@ -13,7 +13,7 @@ from std_msgs.msg import Header
 # initialization of the variables
 laser = LaserScan()
 final_laser = LaserScan()
-laser_list = []
+laser_list = list(np.zeros((396,1)))
 
 
 
@@ -43,28 +43,9 @@ if __name__ == "__main__":
 
             else:
 
-                #otherwise if lenght of the value is less than the max lenght of the laserscan
-                if len(laser_list) < 396:
+                laser_list = list(np.zeros((396,1)))
 
-                    laser_list.append(laser.ranges[i])# add another element to a list
-
-                    if len(laser_list) > 0 :
-
-                        for a in range(len(laser_list)-1):
-
-                            laser_list[a] = 0
-
-                else:
-
-                    laser_list[i] = laser.ranges[i] # if the list is already filled just change de value
-
-
-                    for a in range(i-1):
-
-                        laser_list[a] = 0
-
-
-
+                laser_list[i] = laser.ranges[i] # if the list is already filled just change de value
 
 
                 laser_tuple = tuple(laser_list)# change list into a tuple

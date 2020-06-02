@@ -32,6 +32,22 @@ class Align2D:
 	#   min_delta_err: float, minimum change in alignment error
 	def AlignICP(self, max_iter, min_delta_err):
 
+		plt.figure()
+		plt.plot(self.source[:,0],self.source[:,1], 'or')
+		plt.plot(self.target[:,0],self.target[:,1], 'ob')
+		plt.title("Before initial guess")
+		plt.show()
+
+		src =  np.dot(self.source,self.init_T.T)
+
+		plt.figure()
+		plt.plot(src[:,0],src[:,1], 'or')
+		plt.plot(self.target[:,0],self.target[:,1], 'ob')
+		plt.title("After initial guess")
+		plt.show()
+
+
+
 		mean_sq_error = 1.0e6 # initialize error as large number
 		delta_err = 1.0e6    # change in error (used in stopping condition)
 		T = self.init_T
@@ -49,6 +65,7 @@ class Align2D:
 
 			# update transformation between point sets
 			T = np.dot(T,new_T)
+
 
 			# apply transformation to the source points
 			tf_source = np.dot(self.source,T.T)
@@ -70,14 +87,14 @@ class Align2D:
 
 			num_iter += 1
 
-		"""
-		print('number of iteration:', num_iter)
+
+		print'\n number of iteration:', num_iter
 		plt.figure()
 		plt.plot(tf_source[:,0],tf_source[:,1], 'or')
 		plt.plot(self.target[:,0],self.target[:,1], 'ob')
-		plt.title("END")
+		plt.title("after ICP")
 		plt.show()
-		"""
+
 		return T
 
 	# finds nearest neighbors in the target point for all points
