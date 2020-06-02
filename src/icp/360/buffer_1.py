@@ -11,7 +11,7 @@ from std_msgs.msg import Header, String,Bool
 from nav_msgs.msg import  Odometry
 
 
-
+state = False
 
 
 class Buffer_1():
@@ -55,7 +55,8 @@ class Buffer_1():
 
                 self.pointcloud_buffer.points.append(arg.points[0])    # add the new point
                 self.final_odom = self.current_odom
-                print"scan 1: ", 100*len(self.pointcloud_buffer.points)/396, "%"
+                self.pub_PC.publish(self.pointcloud_buffer)
+
 
 
 
@@ -65,10 +66,11 @@ class Buffer_1():
                 #print(self.pointcloud_buffer)
                 #print(len(self.pointcloud_buffer2.points))
                 #print(self.pointcloud_buffer.points.x)
-                #self.remove_duplicates(self.pointcloud_buffer)
+                self.remove_duplicates(self.pointcloud_buffer)
 
                 self.pub_PC.publish(self.pointcloud_buffer)          # The pointcloud buffer 2 is published
                 self.pub_odom.publish(self.final_odom)
+                rospy.sleep(10)
 
 
     def remove_duplicates(self,PointCloud):
@@ -88,16 +90,21 @@ class Buffer_1():
 
 
 
+def callback(msg):
+    global state
+    state = msg.data
 
-"""
+
 if __name__ == '__main__':
 
 
 
     rospy.init_node('Buffer_1', anonymous=True)
 
-    while not rospy.is_shutdown():
+    while state == False:
+        sub = rospy.Subscriber('/SLAM/buffer_1', Bool, callback)
+    #print(state)
+    buffer = Buffer_1()
 
-        buffer = buffer()
-        rospy.spin()
-"""
+    while(1):
+        pass
