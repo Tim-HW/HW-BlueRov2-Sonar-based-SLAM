@@ -1,21 +1,18 @@
 #!/usr/bin/env python
 
-import roslaunch
+
 import sys
 import rospy
+import numpy as np
+import matplotlib.pyplot as plt
+from std_msgs.msg import Bool
 from sensor_msgs.msg import PointCloud
 from nav_msgs.msg import Odometry
 from tf.transformations import euler_from_quaternion
-import numpy as np
-from scipy.spatial import KDTree
-import random
-import matplotlib.pyplot as plt
-from std_msgs.msg import Bool
 
 from class_icp import Align2D
+from EKF import EKF
 from class_retrive_data import retrive_data
-from buffer_1 import Buffer_1
-from buffer_2 import Buffer_2
 
 
 
@@ -23,7 +20,7 @@ from buffer_2 import Buffer_2
 
 pc_source = PointCloud()
 pc_target = PointCloud()
-
+odom_gt   = np.zeros((3,1))
 
 
 
@@ -39,8 +36,21 @@ def callback_target(var):
 
     pc_target = var
 
+def callback(odom):
+    global odom_gt
+
+    roll = 0
+    pitch = 0
+    theta = 0
+
+    odom_gt[0] = odom.pose.pose.position.x
+    odom_gt[1] = odom.pose.pose.position.y
 
 
+    rot_q  = odom.pose.pose.orientation
+    roll, pitch, theta = euler_from_quaternion([rot_q.x, rot_q.y, rot_q.z, rot_q.w])
+
+    odom_gt[2] = theta
 
 
 
@@ -53,7 +63,8 @@ if __name__ == '__main__':
     rospy.init_node('Static_SLAM', anonymous=True) 	# initiate the node
 
     sub_source   = rospy.Subscriber('/SLAM/buffer/pointcloud_source', PointCloud, callback_source)
-    sub_target   = rospy.Subscriber('/SLAM/buffer/pointcloud_target', PointCloud, callback_target)
+    sub_target   = rospy.Subscriber('/SLAM/buffer/pointcloud_traget', PointCloud, callback_target)
+    sub_source   = rospy.Subscriber('/desistek_saga/pose_gt', Odometry, callback)
 
 
     pub1 = rospy.Publisher('/SLAM/buffer_1', Bool, queue_size=1)
@@ -61,13 +72,16 @@ if __name__ == '__main__':
 
     data = retrive_data() # create the class to retrive the data from the scans
 
+    """
 
 
 
 
 
 
-    raw_input("would you like to process scan 1 ?") # ask you the permition to execute the first scan
+    raw_input("would you like to process scan 1 ? [ENTER]") # ask you the permition to execute the first scan
+
+
 
 
     pub1.publish(True)
@@ -79,7 +93,9 @@ if __name__ == '__main__':
 
 
 
-    raw_input("would you like to process scan 2 ?") # ask you the permition to execute the second scan
+    raw_input("would you like to process scan 2 ? [ENTER]") # ask you the permition to execute the second scan
+
+
 
     pub2.publish(True)
 
@@ -90,21 +106,38 @@ if __name__ == '__main__':
 
 
 
-
-    raw_input("would you like to retrive the data ?") # ask you the permition to retrive the data
-
-
-
+    """
+    raw_input("would you like to retrive the data ? [ENTER]") # ask you the permition to retrive the data
 
 
 
     T       = data.initial_guess()      # initial guess of the transform
-    source  = data.return_source_pc()   # PointCloud of the source scan
-    target  = data.return_target_pc()   # PointCloud of the target scan
+    source,odom_source  = data.return_source()   # PointCloud of the source scan
+    target,odom_target  = data.return_target()   # PointCloud of the target scan
+
+    print "\n Odometry -1 :\n",odom_source
+    print "\n Odometry :\n",odom_target
 
 
 
-    raw_input("would you like to process ICP ?") # ask you the permition to process the ICP
+    #raw_input("would you like to process ICP ? [ENTER]") # ask you the permition to process the ICP
 
 
     ICP = Align2D(source,target,T)      # create object for ICP algo
+
+
+    #raw_input("would you like to process re-Localization ? [ENTER]") # ask you the permition to process the ICP
+    odometry = odom_target
+
+    observation = ICP.transform
+    observation = np.array([[observation[0,2]],[observation[1,2]],[np.arccos(observation[0,0])]])
+    observation = odom_source + observation
+
+    print "\n Sensor :\n",observation
+
+    ekf = EKF(odom_source,odometry)
+    ekf.prediction()
+    new_pose = ekf.correction(observation)
+    print"\n new position :\n", new_pose
+
+    print"\n GROUND TRUTH position :\n", odom_gt

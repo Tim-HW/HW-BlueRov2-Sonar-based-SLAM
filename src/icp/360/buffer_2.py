@@ -23,6 +23,7 @@ class Buffer_2():
         self.pointcloud_buffer       = PointCloud()
         self.current_odom            = Odometry()
         self.final_odom              = Odometry()
+        self.sampled                 = False
 
         self.sub_PC                 = rospy.Subscriber("/own/simulated/dynamic/sonar_PC", PointCloud, self.callback)
         self.pub_PC                 = rospy.Publisher("/SLAM/buffer/pointcloud_target",PointCloud,queue_size = 1)
@@ -65,7 +66,11 @@ class Buffer_2():
                 #print(self.pointcloud_buffer)
                 #print(len(self.pointcloud_buffer2.points))
                 #print(self.pointcloud_buffer.points.x)
-                self.remove_duplicates(self.pointcloud_buffer)
+                if self.sampled == False:
+                    #self.sampling(self.pointcloud_buffer)
+                    self.remove_duplicates(self.pointcloud_buffer)
+                    self.sampled = True
+                    print("ok")
 
                 self.pub_PC.publish(self.pointcloud_buffer)          # The pointcloud buffer 2 is published
                 self.pub_odom.publish(self.final_odom)
@@ -74,17 +79,27 @@ class Buffer_2():
 
     def remove_duplicates(self,PointCloud):
 
-        threshold = 0.1
-        counter = 0
+        threshold = 1.0
 
         for i in range(0,int(len(PointCloud.points)/2)):
             for k in range(int(len(PointCloud.points)/2),len(PointCloud.points)):
 
-                if np.abs(PointCloud.points[i].x - PointCloud.points[k].x) > threshold and np.abs(PointCloud.points[i].y - PointCloud.points[k].y) > threshold:
+                if np.abs(PointCloud.points[i].x - PointCloud.points[k].x) < threshold and np.abs(PointCloud.points[i].y - PointCloud.points[k].y) < threshold:
                     PointCloud.points[k].x = 0
                     PointCloud.points[k].y = 0
 
 
+
+    def sampling(self,PointCloud):
+
+        i = 0
+
+        while i < (len(PointCloud.points)):
+            PointCloud.points[i].x = (PointCloud.points[i].x + PointCloud.points[i + 1].x + PointCloud.points[i + 2].x )/3
+            PointCloud.points[i].y = (PointCloud.points[i].y + PointCloud.points[i + 1].y + PointCloud.points[i + 2].y )/3
+
+            PointCloud.points[i+1].x = PointCloud.points[i+2].x = PointCloud.points[i+1].y = PointCloud.points[i+2].y = 0
+            i = i + 3
 
 
 
