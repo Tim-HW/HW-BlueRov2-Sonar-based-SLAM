@@ -20,10 +20,10 @@ class retrive_data():
 
 
         self.sub_pc_source   = rospy.Subscriber('/SLAM/buffer/pointcloud_source', PointCloud, self.callback_source)
-        self.sub_pc_target   = rospy.Subscriber('/SLAM/buffer/pointcloud_traget', PointCloud, self.callback_target)
+        self.sub_pc_target   = rospy.Subscriber('/SLAM/buffer/pointcloud_target', PointCloud, self.callback_target)
 
         self.sub_odom_source = rospy.Subscriber('/SLAM/buffer/odom_source', Odometry, self.callback_odom_source)
-        self.sub_odom_source = rospy.Subscriber('/SLAM/buffer/odom_traget', Odometry, self.callback_odom_target)
+        self.sub_odom_source = rospy.Subscriber('/SLAM/buffer/odom_target', Odometry, self.callback_odom_target)
 
 
 

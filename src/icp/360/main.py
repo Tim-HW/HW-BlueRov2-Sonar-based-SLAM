@@ -23,6 +23,22 @@ pc_target = PointCloud()
 odom_gt   = np.zeros((3,1))
 
 
+def create_buffer_2():
+    pub2.publish(True)
+
+def delete_buffer_2():
+    pub2.publish(False)
+
+
+
+def create_buffer_1():
+    pub1.publish(True)
+
+def delete_buffer_1():
+    pub1.publish(False)
+
+
+
 
 
 def callback_source(var):
@@ -55,6 +71,11 @@ def callback(odom):
 
 
 
+
+
+
+
+
 if __name__ == '__main__':
 
 
@@ -63,7 +84,7 @@ if __name__ == '__main__':
     rospy.init_node('Static_SLAM', anonymous=True) 	# initiate the node
 
     sub_source   = rospy.Subscriber('/SLAM/buffer/pointcloud_source', PointCloud, callback_source)
-    sub_target   = rospy.Subscriber('/SLAM/buffer/pointcloud_traget', PointCloud, callback_target)
+    sub_target   = rospy.Subscriber('/SLAM/buffer/pointcloud_target', PointCloud, callback_target)
     sub_source   = rospy.Subscriber('/desistek_saga/pose_gt', Odometry, callback)
 
 
@@ -72,72 +93,64 @@ if __name__ == '__main__':
 
     data = retrive_data() # create the class to retrive the data from the scans
 
-    """
+
+
+    while not rospy.is_shutdown():
+
+
+
+
+        raw_input("would you like to process scan 1 ? [ENTER]") # ask you the permition to execute the first scan
+
+        while(len(pc_source.points) != 396):    # wait for the scan to be completed
+            create_buffer_1()
+            print"scan 1: ", 100*len(pc_source.points)/396, "%"
+            rospy.sleep(1)
 
 
 
 
 
 
-    raw_input("would you like to process scan 1 ? [ENTER]") # ask you the permition to execute the first scan
+        raw_input("would you like to process scan 2 ? [ENTER]") # ask you the permition to execute the second scan
+
+        while(len(pc_target.points) != 396):    # wait for the scan to be completed
+            create_buffer_2()
+            print"scan 2: ", 100*len(pc_target.points)/396, "%"
+            rospy.sleep(1)
 
 
 
 
-    pub1.publish(True)
+        raw_input("would you like to retrive the data ? [ENTER]") # ask you the permition to retrive the data
 
-    while(len(pc_source.points) != 396):    # wait for the scan to be completed
-        print"scan 1: ", 100*len(pc_source.points)/396, "%"
-        rospy.sleep(1)
+        T       = data.initial_guess()      # initial guess of the transform
+        source,odom_source  = data.return_source()   # PointCloud of the source scan
+        target,odom_target  = data.return_target()   # PointCloud of the target scan
 
-
-
-
-    raw_input("would you like to process scan 2 ? [ENTER]") # ask you the permition to execute the second scan
+        print "\n Odometry -1 :\n",odom_source
+        print "\n Odometry :\n",odom_target
 
 
 
-    pub2.publish(True)
+        #raw_input("would you like to process ICP ? [ENTER]") # ask you the permition to process the ICP
 
 
-    while(len(pc_target.points) != 396):    # wait for the scan to be completed
-        print"scan 2: ", 100*len(pc_target.points)/396, "%"
-        rospy.sleep(1)
+        ICP = Align2D(source,target,T)      # create object for ICP algo
 
 
+        #raw_input("would you like to process re-Localization ? [ENTER]") # ask you the permition to process the ICP
+        odometry = odom_target
 
-    """
-    raw_input("would you like to retrive the data ? [ENTER]") # ask you the permition to retrive the data
+        observation = ICP.transform
+        observation = np.array([[observation[0,2]],[observation[1,2]],[np.arccos(observation[0,0])]])
+        observation = odom_source + observation
 
+        print "\n Sensor :\n",observation
 
+        ekf = EKF(odom_source,odometry)
+        ekf.prediction()
+        new_pose = ekf.correction(observation)
+        print"\n new position :\n", new_pose
 
-    T       = data.initial_guess()      # initial guess of the transform
-    source,odom_source  = data.return_source()   # PointCloud of the source scan
-    target,odom_target  = data.return_target()   # PointCloud of the target scan
-
-    print "\n Odometry -1 :\n",odom_source
-    print "\n Odometry :\n",odom_target
-
-
-
-    #raw_input("would you like to process ICP ? [ENTER]") # ask you the permition to process the ICP
-
-
-    ICP = Align2D(source,target,T)      # create object for ICP algo
-
-
-    #raw_input("would you like to process re-Localization ? [ENTER]") # ask you the permition to process the ICP
-    odometry = odom_target
-
-    observation = ICP.transform
-    observation = np.array([[observation[0,2]],[observation[1,2]],[np.arccos(observation[0,0])]])
-    observation = odom_source + observation
-
-    print "\n Sensor :\n",observation
-
-    ekf = EKF(odom_source,odometry)
-    ekf.prediction()
-    new_pose = ekf.correction(observation)
-    print"\n new position :\n", new_pose
-
-    print"\n GROUND TRUTH position :\n", odom_gt
+        print"\n GROUND TRUTH position :\n", odom_gt

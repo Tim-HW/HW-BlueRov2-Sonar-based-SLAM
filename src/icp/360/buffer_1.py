@@ -30,6 +30,15 @@ class Buffer_1():
         self.sub_odom                = rospy.Subscriber("/odom", Odometry, self.callback_odom)
         self.pub_odom                = rospy.Publisher("/SLAM/buffer/odom_source", Odometry, queue_size = 1)
 
+    def clear(self):
+
+        self.max_value               = 396
+        self.pointcloud_buffer       = PointCloud()
+        self.current_odom            = Odometry()
+        self.final_odom              = Odometry()
+        self.sampled                 = False
+
+
     def callback_odom(self,var):
 
         #print(len(self.pointcloud_buffer1.points))
@@ -71,14 +80,20 @@ class Buffer_1():
 
                     self.remove_duplicates(self.pointcloud_buffer)
                     #self.sampling(self.pointcloud_buffer)
-
                     self.sampled = True
-                    print("ok")
+
 
                 self.pub_PC.publish(self.pointcloud_buffer)          # The pointcloud buffer 2 is published
                 self.pub_odom.publish(self.final_odom)
-                rospy.sleep(10)
 
+
+    def update_odom(self,odom):
+
+        self.final_odom.Header = self.current_odom.Header
+
+        self.final_odom.pose.pose.position.x += self.current_odom.pose.pose.position.x
+        self.final_odom.pose.pose.position.y += self.current_odom.pose.pose.position.y
+        self.final_odom.pose.pose.position.z += self.current_odom.pose.pose.position.z
 
     def remove_duplicates(self,PointCloud):
 
@@ -96,6 +111,7 @@ class Buffer_1():
         i = 0
 
         while i < (len(PointCloud.points)) and PointCloud.points[i].x != 0 and PointCloud.points[i].y != 0 :
+
             PointCloud.points[i].x = (PointCloud.points[i].x + PointCloud.points[i + 1].x + PointCloud.points[i + 2].x )/3
             PointCloud.points[i].y = (PointCloud.points[i].y + PointCloud.points[i + 1].y + PointCloud.points[i + 2].y )/3
 
@@ -118,11 +134,20 @@ if __name__ == '__main__':
 
 
     rospy.init_node('Buffer_1', anonymous=True)
+    counter = 0
 
-    while state == False:
-        sub = rospy.Subscriber('/SLAM/buffer_1', Bool, callback)
-    #print(state)
-    buffer = Buffer_1()
+    while not rospy.is_shutdown():
 
-    while(1):
-        pass
+        if state == False:
+            sub = rospy.Subscriber('/SLAM/buffer_1', Bool, callback)
+            if counter == 1:
+                buffer.clear()
+                print "buffer 1 cleared"
+                counter = 0
+
+
+        elif state == True:
+            if counter == 0:
+                buffer = Buffer_1()
+                print "buffer 1 created"
+                counter += 1

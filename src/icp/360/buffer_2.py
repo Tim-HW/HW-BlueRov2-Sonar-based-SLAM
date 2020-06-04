@@ -30,6 +30,15 @@ class Buffer_2():
         self.sub_odom                = rospy.Subscriber("/odom", Odometry, self.callback_odom)
         self.pub_odom                = rospy.Publisher("/SLAM/buffer/odom_target", Odometry, queue_size = 1)
 
+
+    def clear(self):
+
+        self.max_value               = 396
+        self.pointcloud_buffer       = PointCloud()
+        self.current_odom            = Odometry()
+        self.final_odom              = Odometry()
+        self.sampled                 = False
+
     def callback_odom(self,var):
 
         #print(len(self.pointcloud_buffer1.points))
@@ -70,11 +79,11 @@ class Buffer_2():
                     #self.sampling(self.pointcloud_buffer)
                     self.remove_duplicates(self.pointcloud_buffer)
                     self.sampled = True
-                    print("ok")
+
 
                 self.pub_PC.publish(self.pointcloud_buffer)          # The pointcloud buffer 2 is published
                 self.pub_odom.publish(self.final_odom)
-                rospy.sleep(10)
+
 
 
     def remove_duplicates(self,PointCloud):
@@ -110,15 +119,27 @@ def callback(msg):
     global state
     state = msg.data
 
+
 if __name__ == '__main__':
 
 
+
     rospy.init_node('Buffer_2', anonymous=True)
+    counter = 0
 
-    while state == False:
-        sub = rospy.Subscriber('/SLAM/buffer_2', Bool, callback)
+    while not rospy.is_shutdown():
 
-    buffer = Buffer_2()
 
-    while(1):
-        pass
+        if state == False:
+            sub = rospy.Subscriber('/SLAM/buffer_2', Bool, callback)
+            if counter == 1:
+                buffer.clear()
+                print "buffer 2 cleared"
+                counter = 0
+
+
+        elif state == True:
+            if counter == 0:
+                buffer = Buffer_2()
+                print "buffer 2 created"
+                counter += 1
