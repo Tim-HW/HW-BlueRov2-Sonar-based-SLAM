@@ -31,7 +31,7 @@ class Align2D:
 	#   max_iter: int, max number of iterations
 	#   min_delta_err: float, minimum change in alignment error
 	def AlignICP(self, max_iter, min_delta_err):
-
+		"""
 		plt.figure()
 		plt.plot(self.source[:,0],self.source[:,1], 'or')
 		plt.plot(self.target[:,0],self.target[:,1], 'ob')
@@ -45,7 +45,7 @@ class Align2D:
 		plt.plot(self.target[:,0],self.target[:,1], 'ob')
 		plt.title("After initial guess")
 		plt.show()
-
+		"""
 
 
 		mean_sq_error = 1.0e6 # initialize error as large number

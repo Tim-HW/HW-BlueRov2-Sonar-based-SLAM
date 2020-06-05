@@ -134,20 +134,23 @@ if __name__ == '__main__':
 
 
     rospy.init_node('Buffer_1', anonymous=True)
+
     counter = 0
 
     while not rospy.is_shutdown():
 
         if state == False:
             sub = rospy.Subscriber('/SLAM/buffer_1', Bool, callback)
-            if counter == 1:
+            if counter != 0:
                 buffer.clear()
                 print "buffer 1 cleared"
-                counter = 0
+                #print len(buffer.pointcloud_buffer.points)
+                
+
 
 
         elif state == True:
             if counter == 0:
                 buffer = Buffer_1()
                 print "buffer 1 created"
-                counter += 1
+                counter = 1
