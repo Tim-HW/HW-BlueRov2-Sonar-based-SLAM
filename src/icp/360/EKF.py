@@ -16,7 +16,7 @@ from class_retrive_data import retrive_data
 
 class EKF(object):
 
-    def __init__(self, u_t_1, u_t):
+    def __init__(self, u_t,u_t_1):
 
 
 
@@ -45,10 +45,6 @@ class EKF(object):
     def prediction(self):
 
 
-        delta_x     = np.squeeze(self.u_t_1[0] - self.u_t[0])
-        delta_y     = np.squeeze(self.u_t_1[1] - self.u_t[1])
-        delta_theta = np.squeeze(self.u_t_1[2] - self.u_t[2])
-
 
         A = np.eye(3)
 
@@ -71,8 +67,6 @@ class EKF(object):
     def correction(self,observation):
 
         z  = observation
-
-
 
 
         K          = np.dot(self.sig_bar,np.dot(self.C.T,np.linalg.inv(np.dot(np.dot(self.C,self.sig_bar),self.C.T) + self.Q)))

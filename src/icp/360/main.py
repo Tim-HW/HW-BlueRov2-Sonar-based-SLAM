@@ -202,10 +202,7 @@ if __name__ == '__main__':
         ICP = Align2D(source,target,T)               # create an ICP object
 
 
-        if counter == 2:
-            odometry = odom_source                       # the odometry becomes the last scan done
-        else:
-            odometry = odom_target                       # the odometry becomes the last scan done
+        odometry = odom_target                       # the odometry becomes the last scan done
 
 
         observation = ICP.transform                                                                     # get the position according to the ICP
@@ -214,7 +211,7 @@ if __name__ == '__main__':
 
         print "\n Sensor :\n",observation                                                               # print the pose of the observation
 
-        ekf = EKF(odom_source,odometry)                 # initiate EKF
+        ekf = EKF(odometry,odom_source)                 # initiate EKF
         ekf.prediction()                                # prediction step
         new_pose = ekf.correction(observation)          # correction step
         print"\n new position :\n", new_pose            # print the new pose

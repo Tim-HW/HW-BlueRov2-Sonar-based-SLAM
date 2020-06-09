@@ -87,15 +87,15 @@ class Align2D:
 
 			num_iter += 1
 
-
+		"""
 		print'\n number of iteration:', num_iter
 		plt.figure()
 		plt.plot(tf_source[:,0],tf_source[:,1], 'or')
 		plt.plot(self.target[:,0],self.target[:,1], 'ob')
 		plt.title("after ICP")
 		plt.show()
-
-		return T
+		"""
+		return new_err
 
 	# finds nearest neighbors in the target point for all points
 	# in the set of source points
