@@ -20,10 +20,16 @@ import sys
 
 class dvl:
 	def __init__(self):
+
 		sub_dvl = rospy.Subscriber('/desistek_saga/dvl', DVL, self.dvl_sub)
 		sub_imu = rospy.Subscriber('/desistek_saga/imu', Imu, self.imu_sub)
+		sub_correction = rospy.Subscriber('SLAM/odom_offset', Odometry, self.odom_sub)
 
 		self.pubOdom = rospy.Publisher("/odom", Odometry, queue_size=1)
+
+		self.odom_correction = Odometry()
+
+		# value to correct the odomtry with the SLAM
 
 		self.timeDVL = rospy.get_time()
 		self.previous_time = 0
@@ -67,6 +73,11 @@ class dvl:
 		self.estimated_traj_x = self.STARTING_X
 		self.estimated_traj_y = self.STARTING_Y
 		self.estimated_traj_z = self.STARTING_Z
+
+	def odom_sub(self,odom):
+
+		self.odom_correction = odom
+
 
 	# The frequency of the DVL is lower than the IMU
 	def dvl_sub(self,msg):
@@ -127,14 +138,15 @@ class dvl:
 		odm.header.frame_id = "world"
 		#odm.child_frame_id = "desistek_saga/base_link"
 
-		odm.pose.pose.position.x = self.estimated_traj_x
-		odm.pose.pose.position.y = self.estimated_traj_y
+		odm.pose.pose.position.x = self.estimated_traj_x + self.odom_correction.pose.pose.position.x
+		odm.pose.pose.position.y = self.estimated_traj_y + self.odom_correction.pose.pose.position.y
 		odm.pose.pose.position.z = self.estimated_traj_z
 
 		odm.pose.pose.orientation.x = self.quaternionX
 		odm.pose.pose.orientation.y = self.quaternionY
 		odm.pose.pose.orientation.z = self.quaternionZ
 		odm.pose.pose.orientation.w = self.quaternionW
+
 		self.pubOdom.publish(odm)
 
 	def quaternion_to_euler(self,x,y,z,w):
@@ -154,6 +166,7 @@ class dvl:
 		return X, Y, Z
 
 def main(args):
+
 	rospy.init_node('read_dvl', anonymous=True)
 
 	a = dvl()

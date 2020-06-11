@@ -132,14 +132,13 @@ if __name__ == '__main__':
 
         if state == False:
             sub = rospy.Subscriber('/SLAM/buffer_2', Bool, callback)
-            if counter == 1:
+            if counter != 0:
                 buffer.clear()
-                print "buffer 2 cleared"
-                counter = 0
+                 #print "buffer 2 cleared"
 
 
         elif state == True:
             if counter == 0:
                 buffer = Buffer_2()
                 print "buffer 2 created"
-                counter += 1
+                counter = 1

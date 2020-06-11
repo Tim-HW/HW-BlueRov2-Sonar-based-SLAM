@@ -143,9 +143,9 @@ if __name__ == '__main__':
             sub = rospy.Subscriber('/SLAM/buffer_1', Bool, callback)
             if counter != 0:
                 buffer.clear()
-                print "buffer 1 cleared"
+                #print "buffer 1 cleared"
                 #print len(buffer.pointcloud_buffer.points)
-                
+
 
 
 
