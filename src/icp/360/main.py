@@ -117,7 +117,6 @@ def call_buffer_1():
 
 
 
-
 def call_buffer_2():
 
 
@@ -151,10 +150,14 @@ def publish_odom_correction(odom):
 
 
 
+def round_matrix(matrix):
 
+    var = 3
 
-
-
+    matrix[0,0] = round(matrix[0,0],var)
+    matrix[1,0] = round(matrix[1,0],var)
+    matrix[2,0] = round(matrix[2,0],var)
+    return matrix
 
 
 
@@ -171,7 +174,7 @@ if __name__ == '__main__':
     sub_source   = rospy.Subscriber('/SLAM/buffer/pointcloud_source', PointCloud, callback_source)  # Subscribes to the buffer 1
     sub_target   = rospy.Subscriber('/SLAM/buffer/pointcloud_target', PointCloud, callback_target)  # Subscribes to the buffer 2
     sub_gt       = rospy.Subscriber('/desistek_saga/pose_gt', Odometry, callback_gt)                   # Subscribes to the Ground Truth pose
-    sub_odom     = rospy.Subscriber('/desistek_saga/pose_gt', Odometry, callback_odom)
+    sub_odom     = rospy.Subscriber('/odom', Odometry, callback_odom)
 
     pub1         = rospy.Publisher('/SLAM/buffer_1', Bool, queue_size=1)                                    # Create publisher to enable or disable the buffer 1 [True = enable / False = disable]
     pub2         = rospy.Publisher('/SLAM/buffer_2', Bool, queue_size=1)                                    # Create publisher to enable or disable the buffer 2 [True = enable / False = disable]
@@ -179,6 +182,7 @@ if __name__ == '__main__':
 
     counter = 0                                                                                     # initiate the counter
 
+    kf = KF()
 
     while not rospy.is_shutdown():
 
@@ -230,24 +234,21 @@ if __name__ == '__main__':
 
         observation = ICP.transform                                                                # get the position according to the ICP
         observation = np.array([[observation[0,2]],[observation[1,2]],[np.arccos(observation[0,0])]])   # create a 3x1 matrix with (x,y,theta)
-        observation = odom_source + observation                                                         # observation becomes the last corrected odometry + the new observation
-
+        observation = odom_source + observation
+                                                               # observation becomes the last corrected odometry + the new observation
 
 
         odometry = odom_target                       # the odometry becomes the last scan done
 
 
-        print "\n Odometry :\n",odometry          # print the odometru of the buffer_2
 
+        print "\n Odometry :\n",odometry          # print the odometru of the buffer_2
         print "\n Sensor :\n",observation                                                               # print the pose of the observation
 
-        kf = KF(odometry,odom_source)                   # initiate KF
-        kf.prediction()                                 # prediction step
+        kf.prediction(odometry)                                 # prediction step
         new_pose = kf.correction(observation)          # correction step
 
         print"\n new position :\n", new_pose            # print the new pose
-
-
         print"\n GROUND TRUTH position :\n", odom_gt    # print the Ground Truth pose
 
 

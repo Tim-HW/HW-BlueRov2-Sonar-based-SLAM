@@ -23,7 +23,7 @@ class dvl:
 
 		sub_dvl = rospy.Subscriber('/desistek_saga/dvl', DVL, self.dvl_sub)
 		sub_imu = rospy.Subscriber('/desistek_saga/imu', Imu, self.imu_sub)
-		sub_correction = rospy.Subscriber('SLAM/odom_offset', Odometry, self.odom_sub)
+		sub_correction = rospy.Subscriber('/SLAM/odom_offset', Odometry, self.odom_sub)
 
 		self.pubOdom = rospy.Publisher("/odom", Odometry, queue_size=1)
 

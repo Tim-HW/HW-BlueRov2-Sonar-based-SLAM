@@ -5,7 +5,7 @@ import sys
 import rospy
 import numpy as np
 
-from EKF import EKF
+from class_KF import KF
 
 
 if __name__ == '__main__':
@@ -37,8 +37,8 @@ if __name__ == '__main__':
 
                                                      # print the pose of the observation
 
-    ekf = EKF(odometry,odom_source)                 # initiate EKF
-    ekf.prediction()                                # prediction step
-    new_pose = ekf.correction(observation)          # correction step
+    kf = KF(odometry,odom_source)                 # initiate EKF
+    kf.prediction()                                # prediction step
+    new_pose = kf.correction(observation)          # correction step
 
     print"\n new position :\n", new_pose            # print the new pose

@@ -18,26 +18,31 @@ class Buffer_1():
 
     def __init__(self):
 
-        self.max_value               = 396
-        self.pointcloud_buffer       = PointCloud()
-        self.current_odom            = Odometry()
-        self.final_odom              = Odometry()
-        self.sampled                 = False
+        self.max_value                = 396
+        self.pointcloud_buffer        = PointCloud()
+        self.current_odom             = Odometry()
+        self.final_odom               = Odometry()
+        self.sampled                  = False
+        self.x                        = 0
+        self.y                        = 0
+        self.th                       = 0
 
-        self.sub_PC                  = rospy.Subscriber("/own/simulated/dynamic/sonar_PC", PointCloud, self.callback)
-        self.pub_PC                  = rospy.Publisher("/SLAM/buffer/pointcloud_source",PointCloud,queue_size = 1)
+        self.sub_PC                   = rospy.Subscriber("/own/simulated/dynamic/sonar_PC", PointCloud, self.callback)
+        self.pub_PC                   = rospy.Publisher("/SLAM/buffer/pointcloud_source",PointCloud,queue_size = 1)
 
-        self.sub_odom                = rospy.Subscriber("/odom", Odometry, self.callback_odom)
-        self.pub_odom                = rospy.Publisher("/SLAM/buffer/odom_source", Odometry, queue_size = 1)
+        self.sub_odom                 = rospy.Subscriber("/odom", Odometry, self.callback_odom)
+        self.pub_odom                 = rospy.Publisher("/SLAM/buffer/odom_source", Odometry, queue_size = 1)
 
     def clear(self):
 
-        self.max_value               = 396
-        self.pointcloud_buffer       = PointCloud()
-        self.current_odom            = Odometry()
-        self.final_odom              = Odometry()
-        self.sampled                 = False
-
+        self.max_value                = 396
+        self.pointcloud_buffer        = PointCloud()
+        self.current_odom             = Odometry()
+        self.final_odom               = Odometry()
+        self.sampled                  = False
+        self.x                        = 0
+        self.y                        = 0
+        self.th                       = 0
 
     def callback_odom(self,var):
 
@@ -64,7 +69,11 @@ class Buffer_1():
                 #print(len(self.pointcloud_buffer1.points))
 
                 self.pointcloud_buffer.points.append(arg.points[0])    # add the new point
-                self.final_odom = self.current_odom
+
+                self.x  += self.current_odom.pose.pose.position.x
+                self.y  += self.current_odom.pose.pose.position.y
+
+
                 self.pub_PC.publish(self.pointcloud_buffer)
 
 
@@ -73,13 +82,20 @@ class Buffer_1():
 
             else:   # if the buffer is full
 
-                #print(self.pointcloud_buffer)
-                #print(len(self.pointcloud_buffer2.points))
-                #print(self.pointcloud_buffer.points.x)
+
+
                 if self.sampled == False:
 
                     self.remove_duplicates(self.pointcloud_buffer)
                     #self.sampling(self.pointcloud_buffer)
+                    self.x = self.x/396
+                    self.y = self.y/396
+
+                    self.final_odom = self.current_odom
+
+                    self.final_odom.pose.pose.position.x = self.x
+                    self.final_odom.pose.pose.position.y = self.y
+
                     self.sampled = True
 
 

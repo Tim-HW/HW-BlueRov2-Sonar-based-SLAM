@@ -16,10 +16,10 @@ from class_retrive_data import retrive_data
 
 class KF(object):
 
-    def __init__(self, u_t,u_t_1):
+    def __init__(self):
 
 
-        self.u_t    = u_t
+
 
         self.sig        = 50*np.eye(3)
         self.sig_bar    = np.array([[0,0,0]])
@@ -29,8 +29,8 @@ class KF(object):
 
 
 
-        self.R          = 1000*np.eye(3)     # noise of the motion
-        self.Q          = 1000*np.eye(3)     # noise of the observation
+        self.R          = 100*np.eye(3)     # noise of the motion
+        self.Q          = 100*np.eye(3)     # noise of the observation
 
 
 
@@ -38,15 +38,12 @@ class KF(object):
 
 
 
-    def prediction(self):
+    def prediction(self,u_t):
 
-
+        self.u_t    = u_t
 
         A = np.eye(3)
 
-        B = np.array([[-np.cos(self.u_t[2][0]), np.sin(self.u_t[2][0]),0],
-                      [np.sin(self.u_t[2][0]) , np.cos(self.u_t[2][0]),0],
-                      [0,0,1]])
 
         self.mu_bar     = self.u_t
         #self.mu_bar     = np.dot(A,self.u_t_1) + np.dot(B,self.u_t)
@@ -71,7 +68,6 @@ class KF(object):
         #print(self.mu)
 
         self.mu = self.mu_bar + np.dot(K,(z - np.dot(self.C,self.mu_bar)))
-
-        #self.sig   = (np.eye(3) - K * self.C)* self.sig_bar
+        self.sig   = (np.eye(3) - K * self.C)* self.sig_bar
         #print(self.mu_bar)
         return self.mu
