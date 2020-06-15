@@ -15,28 +15,6 @@ The aim of this project is to provide a start of a 3D SLAM for underwater ROV. T
 </p>
 
 
-* Mapping using UUV simulation - static:
-
-<p align="center">
-<a href="https://www.youtube.com/watch?v=EbcKPaRj7o8
-" target="_blank"><img src="https://github.com/Bluerov2/MASTER/blob/sonar_mapping/images/1.PNG" width="800" /></a>
-</p>
-
-* Mapping using UUV simulation - dynamic:
-
-<p align="center">
-<a href="https://youtu.be/tYeeyqMWG_0
-" target="_blank"><img src="https://github.com/Bluerov2/MASTER/blob/sonar_mapping/images/2.PNG" width="800" /></a>
-</p>
-
-* Mapping using Micron Sonar in a water tank:
-<p align="center">
-<a href="https://youtu.be/Wra3umj1Cps
-" target="_blank"><img src="https://github.com/Bluerov2/MASTER/blob/sonar_mapping/images/3.PNG" width="800" /></a>
-</p>
-
-
-
 
 ## Related Packages
 
@@ -56,10 +34,7 @@ The aim of this project is to provide a start of a 3D SLAM for underwater ROV. T
   
   https://github.com/pal-robotics-forks/point_cloud_converter.git
 
-* AMCL3:
-  
-  https://github.com/fada-catec/amcl3d.git
-  
+
   
   
   
@@ -68,7 +43,6 @@ To install every packages needed run the commands:
 ```
 $ cd ~/catkin_ws/src
 $ git clone https://github.com/uuvsimulator/uuv_simulator
-$ git clone https://github.com/OctoMap/octomap_mapping.git
 $ git clone https://github.com/uuvsimulator/desistek_saga.git
 $ git clone https://github.com/pal-robotics-forks/point_cloud_converter.git
 $ git clone https://github.com/fada-catec/amcl3d.git
@@ -177,8 +151,11 @@ $ roslaunch sonar_mapping bag.launch
 ## List of Task
 
 - [x] UUV simulation senario
+
+Static SLAM:
+
 - [x] IMU & DLV fused (/odom)
-- [x] 3D Mapping (octomap)
-- [ ] 2D SLAM using Particle Filter
-- [ ] 3D SLAM using Particle Filter
-# Tim-HW-BlueRov2_Sonar_based_SLAM-
+- [x] Scan-matching using ICP
+- [ ] Kalman Filter (Localisation)
+- [ ] Mapping
+
