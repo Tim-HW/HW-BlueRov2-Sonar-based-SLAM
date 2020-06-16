@@ -11,13 +11,13 @@ import numpy as np
 
 class retrive_data():
 
-    def __init__(self,counter):
+    def __init__(self):
 
         self.source_PC   = []
         self.target_PC   = []
         self.T_source    = np.zeros((3,1))
         self.T_target    = np.zeros((3,1))
-        self.counter     = counter
+
 
 
         self.sub_pc_source   = rospy.Subscriber('/SLAM/buffer/pointcloud_source', PointCloud, self.callback_source)
@@ -128,45 +128,25 @@ class retrive_data():
 
     	T = np.zeros((3,3))
 
-        if self.counter == 2:
 
-        	T[0,2] = -self.T_target[0] + self.T_source[0] # x axis
-        	T[1,2] = -self.T_target[1] + self.T_source[1] # y axis
+    	T[0,2] = 0#self.T_target[0] - self.T_source[0] # x axis
+    	T[1,2] = 0#self.T_target[1] - self.T_source[1] # y axis
 
-        	T[0,0] = np.cos(-self.T_target[2] + self.T_source[2])   # cos(a)
-        	T[1,1] = np.cos(-self.T_target[2] + self.T_source[2])   #	      cos(a)
-        	T[1,0] = -np.sin(-self.T_target[2] + self.T_source[2])	 # sin(a)
-        	T[0,1] = np.sin(-self.T_target[2] + self.T_source[2])   #		  -sin(a)
-
-
-        	T[2,2] = 1
+    	T[0,0] = np.cos(self.T_target[2] - self.T_source[2])   # cos(a)
+    	T[1,1] = np.cos(self.T_target[2] - self.T_source[2])   #	      cos(a)
+    	T[1,0] = -np.sin(self.T_target[2] - self.T_source[2])	 # sin(a)
+    	T[0,1] = np.sin(self.T_target[2] - self.T_source[2])   #		  -sin(a)
 
 
-        else:
-        	T[0,2] = self.T_target[0] - self.T_source[0] # x axis
-        	T[1,2] = self.T_target[1] - self.T_source[1] # y axis
+    	T[2,2] = 1
 
-        	T[0,0] = np.cos(self.T_target[2] - self.T_source[2])   # cos(a)
-        	T[1,1] = np.cos(self.T_target[2] - self.T_source[2])   #	      cos(a)
-        	T[1,0] = -np.sin(self.T_target[2] - self.T_source[2])	 # sin(a)
-        	T[0,1] = np.sin(self.T_target[2] - self.T_source[2])   #		  -sin(a)
-
-
-        	T[2,2] = 1
-            
     	return T
 
 
     def return_source(self):
 
-        if self.counter == 2:
-            return self.target_PC, self.T_target
-        else:
-            return self.source_PC, self.T_source
+        return self.source_PC, self.T_source
 
     def return_target(self):
 
-        if self.counter == 2:
-            return self.source_PC, self.T_source
-        else:
-            return self.target_PC, self.T_target
+        return self.target_PC, self.T_target

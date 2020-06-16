@@ -1,18 +1,20 @@
 #!/usr/bin/env python
 
-
+import os
 import sys
 import rospy
 import numpy as np
 import csv
+import math
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Quaternion
 from tf.transformations import euler_from_quaternion
 from tf.transformations import quaternion_from_euler
+import matplotlib.pyplot as plt
 
 
-odom_gt       = Odometry()
-odom_robot    = Odometry()
+odom_gt       = np.zeros((3,1))
+odom_robot    = np.zeros((3,1))
 
 def callback_gt(odom):
 
@@ -50,17 +52,16 @@ def callback_odom(odom):
 
 
 
-def write_CSVfile(x,y,x_gt,y_gt):
+def write_CSVfile(x,y,x_gt,y_gt,error_x,error_y):
 
 	my_path = os.path.abspath(os.path.dirname(__file__))
 	path = os.path.join(my_path, "reccord.csv")
 	with open(path, mode="w") as csv_file:
-		fieldname=[x','y','x_gt','y_gt']
+		fieldname=['x','y','x_gt','y_gt','error_x','error_y']
 		csv_writer = csv.DictWriter(csv_file, fieldnames=fieldname)
 		csv_writer.writeheader()
-		for i in range(0,len(x)):
-			csv_writer.writerow({'x':x[i],'y':y[i],'x_gt':x_gt[i],'y_gt':y_gt[i]})
-
+		for i in range(len(x)):
+			csv_writer.writerow({'x':x[i],'y':y[i],'x_gt':x_gt[i],'y_gt':y_gt[i],'error_x':error_x[i],'error_y':error_y[i]})
 
 
 
@@ -73,8 +74,33 @@ if __name__ == '__main__':
     x_gt = []
     y_gt = []
 
+    error = []
+    error_x = []
+    error_y = []
+    time = []
+
+
     rospy.init_node('Reccord', anonymous=True) 	# initiate the node
     sub_gt       = rospy.Subscriber('/desistek_saga/pose_gt', Odometry, callback_gt)                   # Subscribes to the Ground Truth pose
     sub_odom     = rospy.Subscriber('/odom', Odometry, callback_odom)
-
+    rate = rospy.Rate(2) # 10h
+    i = 0
     while not rospy.is_shutdown():
+
+        try:
+            x.append(odom_robot[0,0])
+            y.append(odom_robot[1,0])
+            x_gt.append(odom_gt[0,0])
+            y_gt.append(odom_gt[1,0])
+            error.append(math.sqrt(np.abs(odom_robot[0,0] - odom_gt[0,0])**2 + np.abs(odom_robot[0,0] - odom_gt[0,0])**2))
+            time.append(i)
+            i += 1
+            rate.sleep()
+
+        except rospy.ROSInterruptException:
+
+            plt.figure()
+            plt.plot(time,error,"r")				   #print the cov in y
+            plt.title('RMS')
+
+            plt.show() #show

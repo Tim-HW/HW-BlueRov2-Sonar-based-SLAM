@@ -37,8 +37,8 @@ if __name__ == '__main__':
 
                                                      # print the pose of the observation
 
-    kf = KF(odometry,odom_source)                 # initiate EKF
-    kf.prediction()                                # prediction step
+    kf = KF()                 # initiate EKF
+    kf.prediction(odometry)                                # prediction step
     new_pose = kf.correction(observation)          # correction step
 
     print"\n new position :\n", new_pose            # print the new pose

@@ -103,7 +103,7 @@ def call_buffer_1():
 
     #Function to erased the previous scan of th buffer 1 and collect a new one
 
-    x = raw_input("would you like to process a scan ? [ENTER]") # ask you the permition to execute the scan
+
 
     while len(pc_source.points) > 2: # while the buffer is not empty
 
@@ -180,18 +180,16 @@ if __name__ == '__main__':
     pub2         = rospy.Publisher('/SLAM/buffer_2', Bool, queue_size=1)                                    # Create publisher to enable or disable the buffer 2 [True = enable / False = disable]
     pub_odom     = rospy.Publisher('SLAM/odom_offset', Odometry, queue_size=1)
 
-    counter = 0                                                                                     # initiate the counter
+    counter = 0                                                                                    # initiate the counter
 
     kf = KF()
 
     while not rospy.is_shutdown():
 
-        if counter > 2 :     # reset the counter if its above 2
-            counter = 1
 
 
 
-        data = retrive_data(counter) # create the class to retrive the data from the scans
+        data = retrive_data() # create the class to retrive the data from the scans
 
 
 
@@ -201,10 +199,6 @@ if __name__ == '__main__':
             call_buffer_2()
 
         if counter == 1:
-
-            call_buffer_1()
-
-        if counter == 2:
 
             call_buffer_2()
 
@@ -233,17 +227,16 @@ if __name__ == '__main__':
         ICP = Align2D(source,target,T)               # create an ICP object
 
         observation = ICP.transform                                                                # get the position according to the ICP
-        observation = np.array([[observation[0,2]],[observation[1,2]],[np.arccos(observation[0,0])]])   # create a 3x1 matrix with (x,y,theta)
-        observation = odom_source + observation
-                                                               # observation becomes the last corrected odometry + the new observation
-
+        print "\n output ICP: \n", observation
+        observation = odom_source + observation                                       # observation becomes the last corrected odometry + the new observation
+        print "\n ICP + last odom: \n", observation
 
         odometry = odom_target                       # the odometry becomes the last scan done
 
 
 
         print "\n Odometry :\n",odometry          # print the odometru of the buffer_2
-        print "\n Sensor :\n",observation                                                               # print the pose of the observation
+        print "\n Sensor   :\n",observation                                                               # print the pose of the observation
 
         kf.prediction(odometry)                                 # prediction step
         new_pose = kf.correction(observation)          # correction step
@@ -256,4 +249,4 @@ if __name__ == '__main__':
 
         publish_odom_correction(new_pose)
 
-        counter += 1                                    # change the case
+        counter = 1                                    # change the case

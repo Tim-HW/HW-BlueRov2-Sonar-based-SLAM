@@ -9,7 +9,9 @@ import matplotlib.pyplot as plt
 from sensor_msgs.msg import PointCloud
 from std_msgs.msg import Header, String,Bool
 from nav_msgs.msg import  Odometry
-
+from tf.transformations import euler_from_quaternion
+from tf.transformations import quaternion_from_euler
+from geometry_msgs.msg import Quaternion
 
 state = False
 
@@ -25,7 +27,10 @@ class Buffer_1():
         self.sampled                  = False
         self.x                        = 0
         self.y                        = 0
-        self.th                       = 0
+        self.orientation_x            = 0
+        self.orientation_y            = 0
+        self.orientation_z            = 0
+        self.orientation_w            = 0
 
         self.sub_PC                   = rospy.Subscriber("/own/simulated/dynamic/sonar_PC", PointCloud, self.callback)
         self.pub_PC                   = rospy.Publisher("/SLAM/buffer/pointcloud_source",PointCloud,queue_size = 1)
@@ -42,7 +47,10 @@ class Buffer_1():
         self.sampled                  = False
         self.x                        = 0
         self.y                        = 0
-        self.th                       = 0
+        self.orientation_x            = 0
+        self.orientation_y            = 0
+        self.orientation_z            = 0
+        self.orientation_w            = 0
 
     def callback_odom(self,var):
 
@@ -70,9 +78,15 @@ class Buffer_1():
 
                 self.pointcloud_buffer.points.append(arg.points[0])    # add the new point
 
-                self.x  += self.current_odom.pose.pose.position.x
-                self.y  += self.current_odom.pose.pose.position.y
+                self.x              += self.current_odom.pose.pose.position.x
+                self.y              += self.current_odom.pose.pose.position.y
 
+                rot_q  = self.current_odom.pose.pose.orientation
+
+                self.orientation_x   += rot_q.x
+                self.orientation_y   += rot_q.y
+                self.orientation_z   += rot_q.z
+                self.orientation_w   += rot_q.w
 
                 self.pub_PC.publish(self.pointcloud_buffer)
 
@@ -88,13 +102,23 @@ class Buffer_1():
 
                     self.remove_duplicates(self.pointcloud_buffer)
                     #self.sampling(self.pointcloud_buffer)
-                    self.x = self.x/396
-                    self.y = self.y/396
+                    self.x  = self.x/396
+                    self.y  = self.y/396
+                    self.orientation_x   = self.orientation_x/396
+                    self.orientation_y   = self.orientation_y/396
+                    self.orientation_z   = self.orientation_z/396
+                    self.orientation_w   = self.orientation_w/396
+
 
                     self.final_odom = self.current_odom
 
                     self.final_odom.pose.pose.position.x = self.x
                     self.final_odom.pose.pose.position.y = self.y
+                    self.final_odom.pose.pose.orientation.x = self.orientation_x
+                    self.final_odom.pose.pose.orientation.y = self.orientation_y
+                    self.final_odom.pose.pose.orientation.z = self.orientation_z
+                    self.final_odom.pose.pose.orientation.w = self.orientation_w
+
 
                     self.sampled = True
 

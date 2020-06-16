@@ -140,6 +140,8 @@ class dvl:
 
 		odm.pose.pose.position.x = self.estimated_traj_x + self.odom_correction.pose.pose.position.x
 		odm.pose.pose.position.y = self.estimated_traj_y + self.odom_correction.pose.pose.position.y
+
+
 		odm.pose.pose.position.z = self.estimated_traj_z
 
 		odm.pose.pose.orientation.x = self.quaternionX

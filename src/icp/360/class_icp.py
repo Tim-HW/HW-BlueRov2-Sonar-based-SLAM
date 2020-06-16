@@ -21,7 +21,7 @@ class Align2D:
 		self.target = target_points
 		self.init_T = initial_T
 		self.target_tree = KDTree(target_points[:,:2])
-		self.transform = self.AlignICP(20, 0.01)
+		self.transform = self.AlignICP(50, 0.0001)
 
 	# uses the iterative closest point algorithm to find the
 	# transformation between the source and target point clouds
@@ -54,7 +54,7 @@ class Align2D:
 		num_iter = 0         # number of iterations
 		tf_source = self.source
 
-		while (delta_err > min_delta_err or new_err < min_delta_err) and num_iter < max_iter:
+		while delta_err > min_delta_err and num_iter < max_iter:
 
 			# find correspondences via nearest-neighbor search
 			matched_trg_pts,matched_src_pts,indices = self.FindCorrespondences(tf_source)
@@ -95,6 +95,9 @@ class Align2D:
 		plt.title("after ICP")
 		plt.show()
 		"""
+		print "error of ICP: ",new_err
+
+		T = np.array([[T[0,2]],[T[1,2]],[np.arccos(T[0,0])]])   # create a 3x1 matrix with (x,y,theta)
 		return T
 
 	# finds nearest neighbors in the target point for all points
