@@ -103,12 +103,12 @@ class Buffer_2():
 
                     self.remove_duplicates(self.pointcloud_buffer)
                     #self.sampling(self.pointcloud_buffer)
-                    self.x  = self.x/396
-                    self.y  = self.y/396
-                    self.orientation_x   = self.orientation_x/396
-                    self.orientation_y   = self.orientation_y/396
-                    self.orientation_z   = self.orientation_z/396
-                    self.orientation_w   = self.orientation_w/396
+                    self.x  = self.x/395
+                    self.y  = self.y/395
+                    self.orientation_x   = self.orientation_x/395
+                    self.orientation_y   = self.orientation_y/395
+                    self.orientation_z   = self.orientation_z/395
+                    self.orientation_w   = self.orientation_w/395
 
 
                     self.final_odom = self.current_odom

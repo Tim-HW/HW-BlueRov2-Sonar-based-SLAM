@@ -85,6 +85,7 @@ if __name__ == '__main__':
     sub_odom     = rospy.Subscriber('/odom', Odometry, callback_odom)
     rate = rospy.Rate(2) # 10h
     i = 0
+    rospy.sleep(5)
     while not rospy.is_shutdown():
 
         try:
@@ -92,6 +93,8 @@ if __name__ == '__main__':
             y.append(odom_robot[1,0])
             x_gt.append(odom_gt[0,0])
             y_gt.append(odom_gt[1,0])
+            error_x.append(np.abs(odom_robot[0,0] - odom_gt[0,0]))
+            error_y.append(np.abs(odom_robot[1,0] - odom_gt[1,0]))
             error.append(math.sqrt(np.abs(odom_robot[0,0] - odom_gt[0,0])**2 + np.abs(odom_robot[0,0] - odom_gt[0,0])**2))
             time.append(i)
             i += 1
@@ -102,5 +105,13 @@ if __name__ == '__main__':
             plt.figure()
             plt.plot(time,error,"r")				   #print the cov in y
             plt.title('RMS')
+
+            plt.show() #show
+
+
+            plt.figure()
+            plt.plot(time,error_x,"b")				   #print the cov in y
+            plt.plot(time,error_y,"r")				   #print the cov in y
+            plt.title('x and y errors')
 
             plt.show() #show

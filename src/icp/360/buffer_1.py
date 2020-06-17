@@ -102,18 +102,19 @@ class Buffer_1():
 
                     self.remove_duplicates(self.pointcloud_buffer)
                     #self.sampling(self.pointcloud_buffer)
+                    """
                     self.x  = self.x/396
                     self.y  = self.y/396
                     self.orientation_x   = self.orientation_x/396
                     self.orientation_y   = self.orientation_y/396
                     self.orientation_z   = self.orientation_z/396
                     self.orientation_w   = self.orientation_w/396
-
+                    """
 
                     self.final_odom = self.current_odom
 
-                    self.final_odom.pose.pose.position.x = self.x
-                    self.final_odom.pose.pose.position.y = self.y
+                    self.final_odom.pose.pose.position.x = -250
+                    self.final_odom.pose.pose.position.y = 300
                     self.final_odom.pose.pose.orientation.x = self.orientation_x
                     self.final_odom.pose.pose.orientation.y = self.orientation_y
                     self.final_odom.pose.pose.orientation.z = self.orientation_z
@@ -192,5 +193,5 @@ if __name__ == '__main__':
         elif state == True:
             if counter == 0:
                 buffer = Buffer_1()
-                print "buffer 1 created"
+                rospy.loginfo("buffer 1 created")
                 counter = 1

@@ -10,6 +10,7 @@ from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Quaternion
 from tf.transformations import euler_from_quaternion
 from tf.transformations import quaternion_from_euler
+from sonar_mapping.msg import my_msg
 
 from class_icp import Align2D
 from class_KF import KF
@@ -22,7 +23,7 @@ from class_retrive_data import retrive_data
 pc_source = PointCloud()
 pc_target = PointCloud()
 odom_gt   = np.zeros((3,1))
-odometry_pusblished  = Odometry()
+
 
 
 
@@ -84,13 +85,6 @@ def callback_gt(odom):
     odom_gt[2] = theta
 
 
-def callback_odom(odom):
-
-    global odometry_pusblished
-
-    odometry_pusblished = odom
-
-
 
 
 
@@ -138,14 +132,7 @@ def call_buffer_2():
 
 
 
-def publish_odom_correction(odom):
 
-    odometry_pusblished.pose.pose.position.x = odom[0,0]
-    odometry_pusblished.pose.pose.position.y = odom[1,0]
-
-    #q = quaternion_from_euler(0.0, 0.0, odom[2,0])
-    #odometry_pusblished.pose.pose.orientation = Quaternion(*q)
-    pub_odom.publish(odometry_pusblished)
 
 
 
@@ -174,11 +161,10 @@ if __name__ == '__main__':
     sub_source   = rospy.Subscriber('/SLAM/buffer/pointcloud_source', PointCloud, callback_source)  # Subscribes to the buffer 1
     sub_target   = rospy.Subscriber('/SLAM/buffer/pointcloud_target', PointCloud, callback_target)  # Subscribes to the buffer 2
     sub_gt       = rospy.Subscriber('/desistek_saga/pose_gt', Odometry, callback_gt)                   # Subscribes to the Ground Truth pose
-    sub_odom     = rospy.Subscriber('/odom', Odometry, callback_odom)
 
     pub1         = rospy.Publisher('/SLAM/buffer_1', Bool, queue_size=1)                                    # Create publisher to enable or disable the buffer 1 [True = enable / False = disable]
     pub2         = rospy.Publisher('/SLAM/buffer_2', Bool, queue_size=1)                                    # Create publisher to enable or disable the buffer 2 [True = enable / False = disable]
-    pub_odom     = rospy.Publisher('SLAM/odom_offset', Odometry, queue_size=1)
+    pub_odom     = rospy.Publisher('/SLAM/offset',my_msg, queue_size=1)
 
     counter = 0                                                                                    # initiate the counter
 
@@ -229,7 +215,7 @@ if __name__ == '__main__':
         observation = ICP.transform                                                                # get the position according to the ICP
         print "\n output ICP: \n", observation
         observation = odom_source + observation                                       # observation becomes the last corrected odometry + the new observation
-        print "\n ICP + last odom: \n", observation
+        #print "\n ICP + last odom: \n", observation
 
         odometry = odom_target                       # the odometry becomes the last scan done
 
@@ -247,6 +233,12 @@ if __name__ == '__main__':
 
         new_pose = new_pose - odometry
 
-        publish_odom_correction(new_pose)
+        print"\n offset :\n", new_pose            # print the new pose
+
+        msg = my_msg()
+        msg.x     = new_pose[0,0]
+        msg.y     = new_pose[1,0]
+        msg.theta = new_pose[2,0]
+        pub_odom.publish(msg)
 
         counter = 1                                    # change the case

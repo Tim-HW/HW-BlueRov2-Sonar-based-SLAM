@@ -56,4 +56,8 @@
       <remap from="cloud_in" to="/own/simulated/dynamic/sonar_PC2" />
 
     </node>
+
+    <node pkg="sonar_mapping" type="reccord_position.py" name="Reccord" output="screen"/>
+    <node pkg="sonar_mapping" type="main.py" name="Static_SLAM" output="screen"/>
+
 </launch>

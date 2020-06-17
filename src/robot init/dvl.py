@@ -10,6 +10,7 @@ In __init__, set OFFSET_X, OFFSET_Y and OFFSET_Z equal to the distance in xyz be
 """
 
 import rospy
+from sonar_mapping.msg import my_msg
 from uuv_sensor_ros_plugins_msgs.msg import DVL
 from sensor_msgs.msg import Imu
 from nav_msgs.msg import Odometry
@@ -19,15 +20,19 @@ import math
 import sys
 
 class dvl:
+
+
+
+
 	def __init__(self):
 
 		sub_dvl = rospy.Subscriber('/desistek_saga/dvl', DVL, self.dvl_sub)
 		sub_imu = rospy.Subscriber('/desistek_saga/imu', Imu, self.imu_sub)
-		sub_correction = rospy.Subscriber('/SLAM/odom_offset', Odometry, self.odom_sub)
+		sub_correction = rospy.Subscriber('/SLAM/offset', my_msg, self.odom_sub)
 
 		self.pubOdom = rospy.Publisher("/odom", Odometry, queue_size=1)
 
-		self.odom_correction = Odometry()
+		self.offset = my_msg()
 
 		# value to correct the odomtry with the SLAM
 
@@ -74,9 +79,14 @@ class dvl:
 		self.estimated_traj_y = self.STARTING_Y
 		self.estimated_traj_z = self.STARTING_Z
 
-	def odom_sub(self,odom):
+	def odom_sub(self,msg):
 
-		self.odom_correction = odom
+		if msg.x == self.offset.x and msg.y == self.offset.y and msg.theta == self.offset.theta:
+			pass
+		else:
+			self.offset.x += msg.x
+			self.offset.y += msg.y
+			self.offset.theta += msg.theta
 
 
 	# The frequency of the DVL is lower than the IMU
@@ -138,8 +148,8 @@ class dvl:
 		odm.header.frame_id = "world"
 		#odm.child_frame_id = "desistek_saga/base_link"
 
-		odm.pose.pose.position.x = self.estimated_traj_x + self.odom_correction.pose.pose.position.x
-		odm.pose.pose.position.y = self.estimated_traj_y + self.odom_correction.pose.pose.position.y
+		odm.pose.pose.position.x = self.offset.x + self.estimated_traj_x
+		odm.pose.pose.position.y = self.offset.y + self.estimated_traj_y
 
 
 		odm.pose.pose.position.z = self.estimated_traj_z
