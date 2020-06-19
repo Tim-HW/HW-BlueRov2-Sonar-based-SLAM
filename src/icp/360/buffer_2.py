@@ -126,9 +126,6 @@ class Buffer_2():
 
                     self.sampled = True
 
-                self.pub_PC.publish(self.pointcloud_buffer)          # The pointcloud buffer 2 is published
-                self.pub_odom.publish(self.final_odom)
-
                 #self.pub_PC.publish(self.pointcloud_buffer)          # The pointcloud buffer 2 is published
                 #self.pub_odom.publish(self.final_odom)
 

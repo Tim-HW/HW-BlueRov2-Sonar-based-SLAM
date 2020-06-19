@@ -126,10 +126,6 @@ class Buffer_1():
                     self.sampled = True
 
 
-                self.pub_PC.publish(self.pointcloud_buffer)          # The pointcloud buffer 2 is published
-                self.pub_odom.publish(self.final_odom)
-
-
     def update_odom(self,odom):
 
         self.final_odom.Header = self.current_odom.Header
@@ -195,5 +191,5 @@ if __name__ == '__main__':
         elif state == True:
             if counter == 0:
                 buffer = Buffer_1()
-                rospy.loginfo("buffer 1 created")
+                print "buffer 1 created"
                 counter = 1

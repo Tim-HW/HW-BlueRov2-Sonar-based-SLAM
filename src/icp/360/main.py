@@ -109,7 +109,7 @@ def call_buffer_1():
         print"scan 1: ", 100*len(pc_source.points)/396, "%"      # Print the current situation of the buffer
         rospy.sleep(1)                                           # wait for 1 second
 
-
+    return data.return_source()
 
 
 def call_buffer_2():
@@ -130,16 +130,38 @@ def call_buffer_2():
         print"scan 2: ", 100*len(pc_target.points)/396, "%" # Print the current situation of the buffer
         rospy.sleep(1)                                      # wait fir 1 second
 
+    return data.return_target()
+
+
+
+def from_icp2world(odom,point):
+
+
+
+
+    tmp = np.array([[np.cos(odom[2,0])  , np.sin(odom[2,0]) , 0],
+                    [-np.sin(odom[2,0]) , np.cos(odom[2,0]) , 0],
+                    [        0          ,             0     , 1],])
+
+    det_theta = point[2,0]
+
+    point[2,0] = 1
+
+
+
+    point = np.dot(tmp,point)
+
+    point[2,0] = det_theta
+
+    point[0,0] = -1*point[0,0]
+
+    point = odom + point
+
+    return point
 
 
 
 if __name__ == '__main__':
-
-
-
-
-
-
 
     rospy.init_node('Static_SLAM', anonymous=True) 	# initiate the node
 
@@ -152,102 +174,63 @@ if __name__ == '__main__':
     pub_odom     = rospy.Publisher('/SLAM/offset',my_msg, queue_size=1)
 
     data = retrive_data() # create the class to retrive the data from the scans
-    counter = 0                                                                                    # initiate the counter
-    rospy.sleep(5)
-    kf = KF()
+    kf = KF()             # create the Kalman Filter
+    initialization = True # initialization variable                                                                         # initiate the counter
+
 
     while not rospy.is_shutdown():
 
 
 
+        if initialization == True:
 
+            source,odom_source = call_buffer_1() # ask the buffer 1 to scan
 
+            target,odom_target = call_buffer_2() # ask the buffer 2 to scan
 
+        if initialization == False:
 
-
-        if counter == 0:
-
-            call_buffer_1()
-
-
-
-            call_buffer_2()
-
-        if counter == 1:
-
-            call_buffer_2()
-
-        #raw_input("would you like to retrive the data ? [ENTER]") # ask you the permition to retrive the data
-
-
-        #in the second case the source and the target PointCloud and odometry will be inverted
-        #because we already have the scan of the buffer 2, we want the scan of the buffer 1. Consequently
-        #the source becomes the new target and the target becomes the new source
-
+            target,odom_target = call_buffer_2() # empty the scan 2 and re-ask for scan
 
         T = data.initial_guess()   # initial guess of the transform
-        source,odom_source = data.return_source()
-        target,odom_target = data.return_target()
-
-
-
-
 
         ICP = Align2D(source,target,T)               # create an ICP object
 
         observation = ICP.transform                  # get the position according to the ICP
 
-        print "before frame change: \n",observation
+        print "Output ICP :\n",observation
 
-        observation = np.array([[observation[0,2]],
-                                [observation[1,2]],
-                                [np.arccos(observation[0,0])]])
+        # transform the 3x3 matrix into a 3x1 matrix
 
-        tmp = np.array([[np.cos(odom_source[2,0])  , np.sin(odom_source[2,0]) , 0],
-                        [-np.sin(odom_source[2,0]) , np.cos(odom_source[2,0]) , 0],
-                        [        0                 ,             0            , 1],])
+        observation = np.array([[observation[0,2]],                 # x
+                                [observation[1,2]],                 # y
+                                [np.arccos(observation[0,0])]])     # theta
 
-        det_theta = observation[2,0]
-
-        observation[2,0] = 1
+        observation = from_icp2world(odom_source, observation)  # transform the position from a ICP frame reference to World reference
 
 
-
-        observation = np.dot(tmp,observation)
-
-        observation[2,0] = det_theta
-
-        observation[0,0] = -1*observation[0,0]
-
-        print "\n output ICP: \n", observation
+        odometry = odom_target # the odometry becomes the last scan done
 
 
 
-        observation = odom_source + observation                                       # observation becomes the last corrected odometry + the new observation
-        #print "\n ICP + last odom: \n", observation
+        print "\n Odometry :\n",odometry          # print the odometry
+        print "\n Sensor   :\n",observation       # print the scan-matching solution                                                       # print the pose of the observation
 
-        odometry = odom_target                       # the odometry becomes the last scan done
-
-
-
-        print "\n Odometry :\n",odometry          # print the odometru of the buffer_2
-        print "\n Sensor   :\n",observation                                                               # print the pose of the observation
-
-        kf.prediction(odometry)                                 # prediction step
-        new_pose = kf.correction(observation)          # correction step
+        kf.prediction(odometry)                         # prediction step
+        new_pose = kf.correction(observation)           # correction step
 
         print"\n new position :\n", new_pose            # print the new pose
         print"\n GROUND TRUTH position :\n", odom_gt    # print the Ground Truth pose
 
 
-        new_pose = new_pose - odometry
+        new_pose = new_pose - odometry # we compute the offset between the new pose and the odometry
 
-        print"\n offset :\n", new_pose            # print the new pose
+        print"\n offset :\n", new_pose  # print the offset
 
-        msg = my_msg()
-        msg.x     = new_pose[0,0]
-        msg.y     = new_pose[1,0]
-        msg.theta = new_pose[2,0]
-        pub_odom.publish(msg)
+        msg = my_msg()              # create msg type
+        msg.x     = new_pose[0,0]   # offset in x
+        msg.y     = new_pose[1,0]   # offset in y
+        msg.theta = new_pose[2,0]   # offset in theta
+        pub_odom.publish(msg)       # publish the offset
 
-        counter = 1                                    # change the case
+        initialization = False      # change the case
