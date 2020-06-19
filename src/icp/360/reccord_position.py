@@ -103,13 +103,13 @@ if __name__ == '__main__':
         except rospy.ROSInterruptException:
 
             plt.figure()
+            plt.subplot(221)
             plt.plot(time,error,"r")				   #print the cov in y
             plt.title('RMS')
 
-            plt.show() #show
 
 
-            plt.figure()
+            plt.subplot(222)
             plt.plot(time,error_x,"b")				   #print the cov in y
             plt.plot(time,error_y,"r")				   #print the cov in y
             plt.title('x and y errors')

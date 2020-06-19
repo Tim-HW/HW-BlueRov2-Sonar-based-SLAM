@@ -111,6 +111,7 @@ def call_buffer_1():
 
 
 
+
 def call_buffer_2():
 
 
@@ -132,22 +133,6 @@ def call_buffer_2():
 
 
 
-
-
-
-
-
-def round_matrix(matrix):
-
-    var = 3
-
-    matrix[0,0] = round(matrix[0,0],var)
-    matrix[1,0] = round(matrix[1,0],var)
-    matrix[2,0] = round(matrix[2,0],var)
-    return matrix
-
-
-
 if __name__ == '__main__':
 
 
@@ -166,8 +151,9 @@ if __name__ == '__main__':
     pub2         = rospy.Publisher('/SLAM/buffer_2', Bool, queue_size=1)                                    # Create publisher to enable or disable the buffer 2 [True = enable / False = disable]
     pub_odom     = rospy.Publisher('/SLAM/offset',my_msg, queue_size=1)
 
+    data = retrive_data() # create the class to retrive the data from the scans
     counter = 0                                                                                    # initiate the counter
-
+    rospy.sleep(5)
     kf = KF()
 
     while not rospy.is_shutdown():
@@ -175,21 +161,21 @@ if __name__ == '__main__':
 
 
 
-        data = retrive_data() # create the class to retrive the data from the scans
+
 
 
 
         if counter == 0:
 
             call_buffer_1()
+
+
+
             call_buffer_2()
 
         if counter == 1:
 
             call_buffer_2()
-
-
-
 
         #raw_input("would you like to retrive the data ? [ENTER]") # ask you the permition to retrive the data
 
@@ -199,12 +185,9 @@ if __name__ == '__main__':
         #the source becomes the new target and the target becomes the new source
 
 
-
-        T                   = data.initial_guess()   # initial guess of the transform
-        source,odom_source  = data.return_source()   # PointCloud of the source scan
-        target,odom_target  = data.return_target()   # PointCloud of the target scan
-
-
+        T = data.initial_guess()   # initial guess of the transform
+        source,odom_source = data.return_source()
+        target,odom_target = data.return_target()
 
 
 
@@ -212,8 +195,34 @@ if __name__ == '__main__':
 
         ICP = Align2D(source,target,T)               # create an ICP object
 
-        observation = ICP.transform                                                                # get the position according to the ICP
+        observation = ICP.transform                  # get the position according to the ICP
+
+        print "before frame change: \n",observation
+
+        observation = np.array([[observation[0,2]],
+                                [observation[1,2]],
+                                [np.arccos(observation[0,0])]])
+
+        tmp = np.array([[np.cos(odom_source[2,0])  , np.sin(odom_source[2,0]) , 0],
+                        [-np.sin(odom_source[2,0]) , np.cos(odom_source[2,0]) , 0],
+                        [        0                 ,             0            , 1],])
+
+        det_theta = observation[2,0]
+
+        observation[2,0] = 1
+
+
+
+        observation = np.dot(tmp,observation)
+
+        observation[2,0] = det_theta
+
+        observation[0,0] = -1*observation[0,0]
+
         print "\n output ICP: \n", observation
+
+
+
         observation = odom_source + observation                                       # observation becomes the last corrected odometry + the new observation
         #print "\n ICP + last odom: \n", observation
 

@@ -34,6 +34,8 @@ class retrive_data():
         y       = []
         ones    = []
 
+
+
         for i in range(len(var.points)):
 
             if var.points[i].x == 0 and var.points[i].y == 0:
@@ -57,6 +59,7 @@ class retrive_data():
         y       = []
         ones    = []
 
+
         for i in range(len(var.points)):
 
             if var.points[i].x == 0 and var.points[i].y == 0:
@@ -70,6 +73,7 @@ class retrive_data():
                 ones.append(1)
 
         self.source_PC = np.vstack((x,y,ones)).T
+
 
 
 
@@ -149,4 +153,6 @@ class retrive_data():
 
     def return_target(self):
 
+
+        #self.target_PC = np.dot(self.target_PC,T.T)
         return self.target_PC, self.T_target

@@ -21,7 +21,7 @@ class Align2D:
 		self.target = target_points
 		self.init_T = initial_T
 		self.target_tree = KDTree(target_points[:,:2])
-		self.transform = self.AlignICP(50, 0.0001)
+		self.transform = self.AlignICP(100, 0.00000001)
 
 	# uses the iterative closest point algorithm to find the
 	# transformation between the source and target point clouds
@@ -32,21 +32,23 @@ class Align2D:
 	#   min_delta_err: float, minimum change in alignment error
 
 	def AlignICP(self, max_iter, min_delta_err):
-		"""
+
 		plt.figure()
+		plt.subplot(221)
 		plt.plot(self.source[:,0],self.source[:,1], 'or')
 		plt.plot(self.target[:,0],self.target[:,1], 'ob')
 		plt.title("Before initial guess")
-		plt.show()
+
 
 		src =  np.dot(self.source,self.init_T.T)
 
-		plt.figure()
+
+		plt.subplot(222)
 		plt.plot(src[:,0],src[:,1], 'or')
 		plt.plot(self.target[:,0],self.target[:,1], 'ob')
 		plt.title("After initial guess")
-		plt.show()
-		"""
+
+
 
 		mean_sq_error = 1.0e6 # initialize error as large number
 		delta_err = 1.0e6    # change in error (used in stopping condition)
@@ -87,17 +89,17 @@ class Align2D:
 
 			num_iter += 1
 
-		"""
+
 		print'\n number of iteration:', num_iter
-		plt.figure()
+		plt.subplot(223)
 		plt.plot(tf_source[:,0],tf_source[:,1], 'or')
 		plt.plot(self.target[:,0],self.target[:,1], 'ob')
 		plt.title("after ICP")
 		plt.show()
-		"""
+
 		print "error of ICP: ",new_err
 
-		T = np.array([[T[0,2]],[T[1,2]],[np.arccos(T[0,0])]])   # create a 3x1 matrix with (x,y,theta)
+		#T = np.array([[T[0,2]],[T[1,2]],[np.arccos(T[0,0])]])   # create a 3x1 matrix with (x,y,theta)
 		return T
 
 	# finds nearest neighbors in the target point for all points

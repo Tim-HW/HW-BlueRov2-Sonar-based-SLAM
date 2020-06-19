@@ -22,7 +22,7 @@ class KF(object):
 
 
         self.R          = 100*np.eye(3)     # noise of the motion
-        self.Q          = 10*np.eye(3)     # noise of the observation
+        self.Q          = 100*np.eye(3)     # noise of the observation
 
 
 
