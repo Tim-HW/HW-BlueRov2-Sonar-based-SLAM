@@ -52,6 +52,28 @@ class Buffer_1():
         self.orientation_z            = 0
         self.orientation_w            = 0
 
+
+
+    def update(self,pointcloud,T):
+
+        point = np.zeros((3,1))
+
+        for i in range(pointcloud.points):
+
+            point[0,0] = pointcloud.point[i].x
+            point[1,0] = pointcloud.point[i].y
+            point[2,0] = 1
+
+            point = np.dot(point,T.T)
+
+            pointcloud.point[i].x = point[0,0]
+            pointcloud.point[i].y = point[1,0]
+            pointcloud.point[i].z = 0
+
+            self.pointcloud_buffer.points.append(pointcloud.point[i])
+
+
+
     def callback_odom(self,var):
 
         #print(len(self.pointcloud_buffer1.points))

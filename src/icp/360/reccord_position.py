@@ -52,16 +52,16 @@ def callback_odom(odom):
 
 
 
-def write_CSVfile(x,y,x_gt,y_gt,error_x,error_y):
+def write_CSVfile(time,x,y,x_gt,y_gt,error_x,error_y):
 
 	my_path = os.path.abspath(os.path.dirname(__file__))
 	path = os.path.join(my_path, "reccord.csv")
 	with open(path, mode="w") as csv_file:
-		fieldname=['x','y','x_gt','y_gt','error_x','error_y']
+		fieldname=['time','x','y','x_gt','y_gt','error_x','error_y']
 		csv_writer = csv.DictWriter(csv_file, fieldnames=fieldname)
 		csv_writer.writeheader()
 		for i in range(len(x)):
-			csv_writer.writerow({'x':x[i],'y':y[i],'x_gt':x_gt[i],'y_gt':y_gt[i],'error_x':error_x[i],'error_y':error_y[i]})
+			csv_writer.writerow({'time':time[i],'x':x[i],'y':y[i],'x_gt':x_gt[i],'y_gt':y_gt[i],'error_x':error_x[i],'error_y':error_y[i]})
 
 
 
@@ -83,9 +83,9 @@ if __name__ == '__main__':
     rospy.init_node('Reccord', anonymous=True) 	# initiate the node
     sub_gt       = rospy.Subscriber('/desistek_saga/pose_gt', Odometry, callback_gt)                   # Subscribes to the Ground Truth pose
     sub_odom     = rospy.Subscriber('/odom', Odometry, callback_odom)
-    rate = rospy.Rate(2) # 10h
+
+    rate = rospy.Rate(2) # 2Hz
     i = 0
-    rospy.sleep(5)
     while not rospy.is_shutdown():
 
         try:
@@ -96,12 +96,15 @@ if __name__ == '__main__':
             error_x.append(np.abs(odom_robot[0,0] - odom_gt[0,0]))
             error_y.append(np.abs(odom_robot[1,0] - odom_gt[1,0]))
             error.append(math.sqrt(np.abs(odom_robot[0,0] - odom_gt[0,0])**2 + np.abs(odom_robot[0,0] - odom_gt[0,0])**2))
-            time.append(i)
+            time.append(i*0.5)
             i += 1
             rate.sleep()
 
         except rospy.ROSInterruptException:
 
+            write_CSVfile(time,x,y,x_gt,y_gt,error_x,error_y)
+
+            """
             plt.figure()
             plt.subplot(221)
             plt.plot(time,error,"r")				   #print the cov in y
@@ -115,3 +118,5 @@ if __name__ == '__main__':
             plt.title('x and y errors')
 
             plt.show() #show
+            """
+            pass

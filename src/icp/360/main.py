@@ -175,7 +175,8 @@ if __name__ == '__main__':
 
     data = retrive_data() # create the class to retrive the data from the scans
     kf = KF()             # create the Kalman Filter
-    initialization = True # initialization variable                                                                         # initiate the counter
+    initialization = True # initialization variable
+    error = 0.0001                                                                       # initiate the counter
 
 
     while not rospy.is_shutdown():
@@ -192,11 +193,33 @@ if __name__ == '__main__':
 
             target,odom_target = call_buffer_2() # empty the scan 2 and re-ask for scan
 
+
+
         T = data.initial_guess()   # initial guess of the transform
 
         ICP = Align2D(source,target,T)               # create an ICP object
 
-        observation = ICP.transform                  # get the position according to the ICP
+        observation,error = ICP.transform                  # get the position according to the ICP
+
+        error = 5
+
+        while error > 0.1:
+
+            print "The ICP error is :", error
+            answer = raw_input("would you like to continue or re-scan the environment ([Y] : continue / [N] : re-scan)")
+            if answer == "Y":
+                error = 0
+            else:
+                target,odom_target = call_buffer_2() # empty the scan 2 and re-ask for scan
+
+                T = data.initial_guess()   # initial guess of the transform
+
+                ICP = Align2D(source,target,T)               # create an ICP object
+
+                observation,error = ICP.transform                  # get the position according to the ICP
+
+
+
 
         print "Output ICP :\n",observation
 

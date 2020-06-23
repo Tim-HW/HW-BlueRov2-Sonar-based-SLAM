@@ -130,21 +130,35 @@ class retrive_data():
     def initial_guess(self):
 
 
-    	T = np.zeros((3,3))
+    	T = np.zeros((3,1))
+        tmp = np.zeros((3,3))
+
+    	T[0,0] = self.T_target[0] - self.T_source[0] # x axis
+    	T[1,0] = self.T_target[1] - self.T_source[1] # y axis
+    	T[2,0] = 1
+
+        rotation = np.array([[np.cos(-self.T_source[2]) ,np.sin(-self.T_source[2]) , 0 ],
+                             [-np.sin(-self.T_source[2]),np.cos(-self.T_source[2]) , 0 ],
+                             [            0             ,              0           , 1 ],])
 
 
-    	T[0,2] = 0#self.T_target[0] - self.T_source[0] # x axis
-    	T[1,2] = 0#self.T_target[1] - self.T_source[1] # y axis
 
-    	T[0,0] = np.cos(self.T_target[2] - self.T_source[2])   # cos(a)
-    	T[1,1] = np.cos(self.T_target[2] - self.T_source[2])   #	      cos(a)
-    	T[1,0] = -np.sin(self.T_target[2] - self.T_source[2])	 # sin(a)
-    	T[0,1] = np.sin(self.T_target[2] - self.T_source[2])   #		  -sin(a)
+        T = np.dot(rotation,T)
+
+    	T[2,0] = self.T_target[2] - self.T_source[2]   # cos(a)
 
 
-    	T[2,2] = 1
+        tmp[0,0] = np.cos(T[2,0])
+        tmp[1,0] = -np.sin(T[2,0])
+        tmp[0,1] = np.sin(T[2,0])
+        tmp[1,1] = np.cos(T[2,0])
 
-    	return T
+        tmp[2,0] = T[0,0]
+        tmp[2,1] = T[1,0]
+
+    	tmp[2,2] = 1
+
+    	return tmp
 
 
     def return_source(self):
