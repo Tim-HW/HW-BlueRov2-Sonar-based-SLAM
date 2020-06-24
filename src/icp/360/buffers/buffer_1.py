@@ -14,6 +14,9 @@ from tf.transformations import quaternion_from_euler
 from geometry_msgs.msg import Quaternion
 
 state = False
+target = PointCloud()
+
+T = np.zeros((3,3))
 
 
 class Buffer_1():
@@ -147,6 +150,8 @@ class Buffer_1():
 
                     self.sampled = True
 
+            self.pub_PC.publish(self.pointcloud_buffer)          # The pointcloud buffer 2 is published
+            self.pub_odom.publish(self.final_odom)
 
     def update_odom(self,odom):
 
@@ -181,9 +186,27 @@ class Buffer_1():
 
 
 
+def callback_T(msg):
 
 
 
+    T[0,0] = np.cos(msg.theta)
+    T[1,0] = -np.sin(msg.theta)
+    T[0,1] = np.sin(msg.theta)
+    T[1,1] = np.cos(msg.theta)
+
+    T[0,2] = msg.x
+    T[1,2] = msg.y
+
+    T[2,2] = 1
+
+
+
+
+def callback_pc(msg):
+    global target
+
+    target = msg
 
 def callback(msg):
     global state
@@ -192,18 +215,16 @@ def callback(msg):
 
 if __name__ == '__main__':
 
-
-
     rospy.init_node('Buffer_1', anonymous=True)
-
-    counter = 0
+    sub1 = rospy.Subscriber('/SLAM/buffer/PointCloud', PointCloud, callback_pc)
+    initialization = True
 
     while not rospy.is_shutdown():
 
         if state == False:
-            sub = rospy.Subscriber('/SLAM/buffer_1', Bool, callback)
-            if counter != 0:
-                buffer.clear()
+            sub2 = rospy.Subscriber('/SLAM/buffer_1', Bool, callback)
+            if initialization == False:
+                buffer.update(target,T)
                 #print "buffer 1 cleared"
                 #print len(buffer.pointcloud_buffer.points)
 
@@ -211,7 +232,7 @@ if __name__ == '__main__':
 
 
         elif state == True:
-            if counter == 0:
+            if initialization == True:
                 buffer = Buffer_1()
                 print "buffer 1 created"
-                counter = 1
+                initialization = False

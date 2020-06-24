@@ -20,7 +20,7 @@ class Align2D:
 		self.target = target_points
 		self.init_T = initial_T
 		self.target_tree = KDTree(target_points[:,:2])
-		self.transform = self.AlignICP(100, 0.00000001)
+		self.transform = self.AlignICP(50, 0.00000001)
 
 	# uses the iterative closest point algorithm to find the
 	# transformation between the source and target point clouds

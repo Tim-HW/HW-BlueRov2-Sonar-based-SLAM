@@ -170,20 +170,20 @@ if __name__ == '__main__':
 
 
     rospy.init_node('Buffer_2', anonymous=True)
-    counter = 0
+    initialization = True
 
     while not rospy.is_shutdown():
 
 
         if state == False:
             sub = rospy.Subscriber('/SLAM/buffer_2', Bool, callback)
-            if counter != 0:
+            if initialization == False:
                 buffer.clear()
                  #print "buffer 2 cleared"
 
 
         elif state == True:
-            if counter == 0:
+            if initialization == True:
                 buffer = Buffer_2()
                 print "buffer 2 created"
-                counter = 1
+                initialization = False

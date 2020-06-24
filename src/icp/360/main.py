@@ -155,7 +155,7 @@ def from_icp2world(odom,point):
 
     point[0,0] = -1*point[0,0]
 
-    point = odom + point
+    #point = odom + point
 
     return point
 
@@ -169,9 +169,10 @@ if __name__ == '__main__':
     sub_target   = rospy.Subscriber('/SLAM/buffer/pointcloud_target', PointCloud, callback_target)  # Subscribes to the buffer 2
     sub_gt       = rospy.Subscriber('/desistek_saga/pose_gt', Odometry, callback_gt)                   # Subscribes to the Ground Truth pose
 
-    pub1         = rospy.Publisher('/SLAM/buffer_1', Bool, queue_size=1)                                    # Create publisher to enable or disable the buffer 1 [True = enable / False = disable]
-    pub2         = rospy.Publisher('/SLAM/buffer_2', Bool, queue_size=1)                                    # Create publisher to enable or disable the buffer 2 [True = enable / False = disable]
-    pub_odom     = rospy.Publisher('/SLAM/offset',my_msg, queue_size=1)
+    pub1         = rospy.Publisher('/SLAM/buffer_1', Bool   , queue_size=1)                                    # Create publisher to enable or disable the buffer 1 [True = enable / False = disable]
+    pub2         = rospy.Publisher('/SLAM/buffer_2', Bool   , queue_size=1)                                    # Create publisher to enable or disable the buffer 2 [True = enable / False = disable]
+    pub_odom     = rospy.Publisher('/SLAM/offset'  , my_msg , queue_size=1)
+    pub_T        = rospy.Publisher('/SLAM/T'       , my_msg , queue_size=1)
 
     data = retrive_data() # create the class to retrive the data from the scans
     kf = KF()             # create the Kalman Filter
@@ -201,22 +202,25 @@ if __name__ == '__main__':
 
         observation,error = ICP.transform                  # get the position according to the ICP
 
-        error = 5
 
-        while error > 0.1:
+        while error > 0.1:  # if the error is too high
 
-            print "The ICP error is :", error
-            answer = raw_input("would you like to continue or re-scan the environment ([Y] : continue / [N] : re-scan)")
-            if answer == "Y":
+            print "The ICP error is :", error                                                                               # display the error
+            answer = raw_input("would you like to continue or re-scan the environment ([Y] : continue / [N] : re-scan)")    # asking you what to do
+
+            if answer == "Y":       # if you want to continue the error becomes 0 and you escape the loop
+
                 error = 0
-            else:
+
+            else:                   # otherwise relaunch the scans
+
                 target,odom_target = call_buffer_2() # empty the scan 2 and re-ask for scan
 
-                T = data.initial_guess()   # initial guess of the transform
+                T = data.initial_guess()             # initial guess of the transform
 
-                ICP = Align2D(source,target,T)               # create an ICP object
+                ICP = Align2D(source,target,T)       # create an ICP object
 
-                observation,error = ICP.transform                  # get the position according to the ICP
+                observation,error = ICP.transform    # get the position according to the ICP
 
 
 
@@ -229,11 +233,19 @@ if __name__ == '__main__':
                                 [observation[1,2]],                 # y
                                 [np.arccos(observation[0,0])]])     # theta
 
+
+        msg = my_msg()              # create msg type
+        msg.x     = observation[0,0]   # offset in x
+        msg.y     = observation[1,0]   # offset in y
+        msg.theta = observation[2,0]   # offset in theta
+        pub_T.publish(msg)       # publish the offset
+
+
         observation = from_icp2world(odom_source, observation)  # transform the position from a ICP frame reference to World reference
 
+        odometry    = odom_target # the odometry becomes the last scan done
 
-        odometry = odom_target # the odometry becomes the last scan done
-
+        observation = odom_source + observation
 
 
         print "\n Odometry :\n",odometry          # print the odometry
