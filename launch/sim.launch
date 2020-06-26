@@ -36,7 +36,7 @@
 
 
 
-    <node pkg="sonar_mapping" type="buffer_1.py" name="Buffer_1" output="screen"/>
+    <!-- <node pkg="sonar_mapping" type="buffer_1.py" name="Buffer_1" output="screen"/>-->
     <node pkg="sonar_mapping" type="buffer_2.py" name="Buffer_2" output="screen"/>
     <!--
     <node pkg="sonar_mapping" type="octomap_launch.py" name="en_Mapping" output="screen"/>

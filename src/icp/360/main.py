@@ -96,14 +96,6 @@ def call_buffer_1():
 
 
     #Function to erased the previous scan of th buffer 1 and collect a new one
-
-
-
-    while len(pc_source.points) > 2: # while the buffer is not empty
-
-        delete_buffer_1()            # ask for the buffer to empty it current data
-        rospy.sleep(1)               # wait fir 1 second
-
     while(len(pc_source.points) != 396):                         # once empty, wait for the buffer to be filled
         create_buffer_1()                                        # allow the buffer to collect data
         print"scan 1: ", 100*len(pc_source.points)/396, "%"      # Print the current situation of the buffer
@@ -235,8 +227,8 @@ if __name__ == '__main__':
 
 
         msg = my_msg()              # create msg type
-        msg.x     = observation[0,0]   # offset in x
-        msg.y     = observation[1,0]   # offset in y
+        msg.x     = -observation[0,0]   # offset in x
+        msg.y     = -observation[1,0]   # offset in y
         msg.theta = observation[2,0]   # offset in theta
         pub_T.publish(msg)       # publish the offset
 
@@ -267,5 +259,7 @@ if __name__ == '__main__':
         msg.y     = new_pose[1,0]   # offset in y
         msg.theta = new_pose[2,0]   # offset in theta
         pub_odom.publish(msg)       # publish the offset
+
+        delete_buffer_1()
 
         initialization = False      # change the case

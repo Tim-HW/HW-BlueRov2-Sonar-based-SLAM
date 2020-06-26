@@ -12,6 +12,7 @@ from nav_msgs.msg import  Odometry
 from tf.transformations import euler_from_quaternion
 from tf.transformations import quaternion_from_euler
 from geometry_msgs.msg import Quaternion
+from sonar_mapping.msg import my_msg
 
 state = False
 target = PointCloud()
@@ -61,19 +62,30 @@ class Buffer_1():
 
         point = np.zeros((3,1))
 
-        for i in range(pointcloud.points):
+        #print(len(pointcloud.points))
 
-            point[0,0] = pointcloud.point[i].x
-            point[1,0] = pointcloud.point[i].y
+
+
+        for i in range(len(pointcloud.points)):
+
+            point[0,0] = pointcloud.points[i].x
+            point[1,0] = pointcloud.points[i].y
             point[2,0] = 1
 
-            point = np.dot(point,T.T)
+            #print(point)
+            #print(T)
+            point = np.dot(T,point)
+            #print(point)
+            #print(" ")
 
-            pointcloud.point[i].x = point[0,0]
-            pointcloud.point[i].y = point[1,0]
-            pointcloud.point[i].z = 0
+            pointcloud.points[i].x = point[0,0]
+            pointcloud.points[i].y = point[1,0]
+            pointcloud.points[i].z = 0
 
-            self.pointcloud_buffer.points.append(pointcloud.point[i])
+            self.pointcloud_buffer.points.append(pointcloud.points[i])
+
+        self.pub_PC.publish(self.pointcloud_buffer)          # The pointcloud buffer 2 is published
+
 
 
 
@@ -216,22 +228,31 @@ def callback(msg):
 if __name__ == '__main__':
 
     rospy.init_node('Buffer_1', anonymous=True)
-    sub1 = rospy.Subscriber('/SLAM/buffer/PointCloud', PointCloud, callback_pc)
+    sub1 = rospy.Subscriber('/SLAM/buffer/pointcloud_target', PointCloud, callback_pc)
+    sub2 = rospy.Subscriber('/SLAM/T', my_msg, callback_T)
     initialization = True
+    update = False
 
     while not rospy.is_shutdown():
 
         if state == False:
-            sub2 = rospy.Subscriber('/SLAM/buffer_1', Bool, callback)
+            sub3 = rospy.Subscriber('/SLAM/buffer_1', Bool, callback)
             if initialization == False:
-                buffer.update(target,T)
-                #print "buffer 1 cleared"
-                #print len(buffer.pointcloud_buffer.points)
+                if update == False:
+
+                    buffer.update(target,T)
+                    update = True
+
+                else:
+                    pass
 
 
 
 
         elif state == True:
+
+            update = False
+
             if initialization == True:
                 buffer = Buffer_1()
                 print "buffer 1 created"
