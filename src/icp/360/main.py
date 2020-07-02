@@ -153,6 +153,32 @@ def from_icp2world(odom,point):
 
 
 
+
+def from_world2icp(odom,T):
+
+    point = np.zeros((3,1))
+
+    point[0,0] = T[0,2]
+    point[1,0] = T[1,2]
+    point[2,0] =   1
+
+
+    tmp = np.array([[np.cos(-odom[2,0])  , np.sin(-odom[2,0]) , 0],
+                    [-np.sin(-odom[2,0]) , np.cos(-odom[2,0]) , 0],
+                    [        0          ,             0     , 1],])
+
+    point = np.dot(tmp,point)
+
+    point[2,0] = np.arccos(T[0,0])
+
+    point[0,0] = -1*point[0,0]
+
+    T[0,2] = point[0,0]
+    T[1,2] = point[1,0]
+
+    return T
+
+
 if __name__ == '__main__':
 
     rospy.init_node('Static_SLAM', anonymous=True) 	# initiate the node
@@ -190,6 +216,8 @@ if __name__ == '__main__':
 
         T = data.initial_guess()   # initial guess of the transform
 
+        #T = from_world2icp(odom_source,T)
+        print(T)
         ICP = Align2D(source,target,T)               # create an ICP object
 
         observation,error = ICP.transform                  # get the position according to the ICP
@@ -205,6 +233,7 @@ if __name__ == '__main__':
                 error = 0
 
             else:                   # otherwise relaunch the scans
+
 
                 target,odom_target = call_buffer_2() # empty the scan 2 and re-ask for scan
 

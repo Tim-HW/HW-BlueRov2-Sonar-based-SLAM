@@ -137,6 +137,10 @@ class retrive_data():
     	T[1,0] = self.T_target[1] - self.T_source[1] # y axis
     	T[2,0] = 1
 
+        #print(self.T_source)
+        #print(self.T_target)
+        #print(T)
+
         rotation = np.array([[np.cos(-self.T_source[2]) ,np.sin(-self.T_source[2]) , 0 ],
                              [-np.sin(-self.T_source[2]),np.cos(-self.T_source[2]) , 0 ],
                              [            0             ,              0           , 1 ],])
@@ -153,8 +157,8 @@ class retrive_data():
         tmp[0,1] = np.sin(T[2,0])
         tmp[1,1] = np.cos(T[2,0])
 
-        tmp[2,0] = T[0,0]
-        tmp[2,1] = T[1,0]
+        tmp[0,2] = 0#T[0,0]
+        tmp[1,2] = 0#T[1,0]
 
     	tmp[2,2] = 1
 

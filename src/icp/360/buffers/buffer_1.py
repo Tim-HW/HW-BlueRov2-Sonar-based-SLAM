@@ -9,13 +9,13 @@ import matplotlib.pyplot as plt
 from sensor_msgs.msg import PointCloud
 from std_msgs.msg import Header, String,Bool
 from nav_msgs.msg import  Odometry
-from tf.transformations import euler_from_quaternion
-from tf.transformations import quaternion_from_euler
+from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from geometry_msgs.msg import Quaternion
 from sonar_mapping.msg import my_msg
 
-state = False
-target = PointCloud()
+state       = False
+target_PC   = PointCloud()
+odom_target = np.zeros((3,1))
 
 T = np.zeros((3,3))
 
@@ -26,19 +26,18 @@ class Buffer_1():
 
         self.max_value                = 396
         self.pointcloud_buffer        = PointCloud()
+        self.pointcloud_buffer.header.frame_id = "odom"
+
         self.current_odom             = Odometry()
         self.final_odom               = Odometry()
         self.sampled                  = False
         self.x                        = 0
         self.y                        = 0
-        self.orientation_x            = 0
-        self.orientation_y            = 0
-        self.orientation_z            = 0
-        self.orientation_w            = 0
+        self.theta                    = 0
+
 
         self.sub_PC                   = rospy.Subscriber("/own/simulated/dynamic/sonar_PC", PointCloud, self.callback)
         self.pub_PC                   = rospy.Publisher("/SLAM/buffer/pointcloud_source",PointCloud,queue_size = 1)
-
         self.sub_odom                 = rospy.Subscriber("/odom", Odometry, self.callback_odom)
         self.pub_odom                 = rospy.Publisher("/SLAM/buffer/odom_source", Odometry, queue_size = 1)
 
@@ -51,40 +50,65 @@ class Buffer_1():
         self.sampled                  = False
         self.x                        = 0
         self.y                        = 0
-        self.orientation_x            = 0
-        self.orientation_y            = 0
-        self.orientation_z            = 0
-        self.orientation_w            = 0
+        self.theta                    = 0
+
+
 
 
 
     def update(self,pointcloud,T):
 
+
+
         point = np.zeros((3,1))
-
-        #print(len(pointcloud.points))
-
 
 
         for i in range(len(pointcloud.points)):
 
-            point[0,0] = pointcloud.points[i].x
-            point[1,0] = pointcloud.points[i].y
+            if pointcloud.points[i].x != 0 and pointcloud.points[i].y != 0:
+
+                point[0,0] = pointcloud.points[i].x
+                point[1,0] = pointcloud.points[i].y
+                point[2,0] = 1
+
+                point = np.dot(T,point)
+
+
+                pointcloud.points[i].x = point[0,0]
+                pointcloud.points[i].y = point[1,0]
+                pointcloud.points[i].z = 0
+
+                #self.pointcloud_buffer.points.append(pointcloud.points[i])
+
+
+
+
+    def change_origin(self,origin):
+
+        new_origin      = np.eye(3)
+        print"source :",self.final_odom.pose.pose.position.x
+        print"origin :",origin[0,0]
+        new_origin[0,2] = self.final_odom.pose.pose.position.x - origin[0,0]
+        new_origin[1,2] = self.final_odom.pose.pose.position.y - origin[1,0]
+        print(new_origin)
+        point = np.zeros((3,1))
+
+        for i in range(len(self.pointcloud_buffer.points)):
+
+            point[0,0] = self.pointcloud_buffer.points[i].x
+            point[1,0] = self.pointcloud_buffer.points[i].y
             point[2,0] = 1
 
-            #print(point)
-            #print(T)
-            point = np.dot(T,point)
-            #print(point)
-            #print(" ")
+            point = np.dot(new_origin,point)
 
-            pointcloud.points[i].x = point[0,0]
-            pointcloud.points[i].y = point[1,0]
-            pointcloud.points[i].z = 0
 
-            self.pointcloud_buffer.points.append(pointcloud.points[i])
+            self.pointcloud_buffer.points[i].x = point[0,0]
+            self.pointcloud_buffer.points[i].y = point[1,0]
+            self.pointcloud_buffer.points[i].z = 0
+
 
         self.pub_PC.publish(self.pointcloud_buffer)          # The pointcloud buffer 2 is published
+
 
 
 
@@ -120,12 +144,12 @@ class Buffer_1():
 
                 rot_q  = self.current_odom.pose.pose.orientation
 
-                self.orientation_x   += rot_q.x
-                self.orientation_y   += rot_q.y
-                self.orientation_z   += rot_q.z
-                self.orientation_w   += rot_q.w
+                orientation_list = [rot_q.x, rot_q.y, rot_q.z, rot_q.w]
+                (roll, pitch, yaw) = euler_from_quaternion(orientation_list)
+                self.theta += yaw
 
                 self.pub_PC.publish(self.pointcloud_buffer)
+
 
 
 
@@ -142,20 +166,12 @@ class Buffer_1():
                     """
                     self.x  = self.x/396
                     self.y  = self.y/396
-                    self.orientation_x   = self.orientation_x/396
-                    self.orientation_y   = self.orientation_y/396
-                    self.orientation_z   = self.orientation_z/396
-                    self.orientation_w   = self.orientation_w/396
                     """
 
                     self.final_odom = self.current_odom
 
                     self.final_odom.pose.pose.position.x = -250
                     self.final_odom.pose.pose.position.y = 300
-                    self.final_odom.pose.pose.orientation.x = self.orientation_x
-                    self.final_odom.pose.pose.orientation.y = self.orientation_y
-                    self.final_odom.pose.pose.orientation.z = self.orientation_z
-                    self.final_odom.pose.pose.orientation.w = self.orientation_w
 
                     self.pub_PC.publish(self.pointcloud_buffer)          # The pointcloud buffer 2 is published
                     self.pub_odom.publish(self.final_odom)
@@ -183,6 +199,7 @@ class Buffer_1():
                 if np.abs(PointCloud.points[i].x - PointCloud.points[k].x) < threshold and np.abs(PointCloud.points[i].y - PointCloud.points[k].y) < threshold:
                     PointCloud.points[k].x = 0
                     PointCloud.points[k].y = 0
+
 
     def sampling(self,PointCloud):
 
@@ -216,31 +233,59 @@ def callback_T(msg):
 
 
 def callback_pc(msg):
-    global target
+    global target_PC
 
-    target = msg
+    target_PC = msg
+
 
 def callback(msg):
+
     global state
     state = msg.data
+
+
+
+def callback_odom_target(msg):
+
+    global target_odom
+
+    odom_target[0,0] = msg.pose.pose.position.x
+    odom_target[1,0] = msg.pose.pose.position.y
+    odom_target[2,0] = 1
+
+
 
 
 if __name__ == '__main__':
 
     rospy.init_node('Buffer_1', anonymous=True)
+
     sub1 = rospy.Subscriber('/SLAM/buffer/pointcloud_target', PointCloud, callback_pc)
     sub2 = rospy.Subscriber('/SLAM/T', my_msg, callback_T)
+    sub3 = rospy.Subscriber('/SLAM/buffer/odom_target', Odometry, callback_odom_target)
+
+
     initialization = True
     update = False
 
+
+
     while not rospy.is_shutdown():
 
+
+
+
+
         if state == False:
-            sub3 = rospy.Subscriber('/SLAM/buffer_1', Bool, callback)
+
+            sub4 = rospy.Subscriber('/SLAM/buffer_1', Bool, callback)
+
             if initialization == False:
+
                 if update == False:
 
-                    buffer.update(target,T)
+                    buffer.update(target_PC,T)
+                    buffer.change_origin(odom_target)
                     update = True
 
                 else:

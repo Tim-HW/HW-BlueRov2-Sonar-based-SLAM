@@ -32,7 +32,18 @@
       <remap from="points2_in" to="/own/simulated/dynamic/sonar_PC2"/>
       <remap from="points_out" to="/own/simulated/dynamic/sonar_PC" />
 
+      <remap from="points_in"   to="/SLAM/buffer/pointcloud_source"/>
+      <remap from="points2_out" to="/SLAM/buffer/pointcloud2_source"/>
+
     </node>
+
+    <node pkg="point_cloud_converter" name="point_cloud_converter_target" type="point_cloud_converter_target" >
+
+      <remap from="points_in"   to="/SLAM/buffer/pointcloud_target"/>
+      <remap from="points2_out" to="/SLAM/buffer/pointcloud2_target"/>
+
+    </node>
+
 
 
 
@@ -47,7 +58,7 @@
       <param name="resolution" value="1.0" />
 
       <!-- fixed map frame (set to 'map' if SLAM or localization running!) -->
-      <param name="frame_id" type="string" value="desistek_saga/base_link" />
+      <param name="frame_id" type="string" value="world" />
 
       <!-- maximum range to integrate (speedup!) -->
       <param name="sensor_model/max_range" value="75.0" />

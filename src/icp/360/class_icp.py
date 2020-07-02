@@ -31,7 +31,7 @@ class Align2D:
 	#   min_delta_err: float, minimum change in alignment error
 
 	def AlignICP(self, max_iter, min_delta_err):
-
+		
 		plt.figure()
 		plt.subplot(221)
 		plt.plot(self.source[:,0],self.source[:,1], 'or')

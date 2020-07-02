@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 
 from sensor_msgs.msg import PointCloud
 from std_msgs.msg import Header, String,Bool
-from nav_msgs.msg import  Odometry
-
+from nav_msgs.msg import Odometry
+from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
 state = False
 
@@ -26,10 +26,7 @@ class Buffer_2():
         self.sampled                  = False
         self.x                        = 0
         self.y                        = 0
-        self.orientation_x            = 0
-        self.orientation_y            = 0
-        self.orientation_z            = 0
-        self.orientation_w            = 0
+        self.theta                    = 0
 
         self.sub_PC                   = rospy.Subscriber("/own/simulated/dynamic/sonar_PC", PointCloud, self.callback)
         self.pub_PC                   = rospy.Publisher("/SLAM/buffer/pointcloud_target",PointCloud,queue_size = 1)
@@ -46,10 +43,7 @@ class Buffer_2():
         self.sampled                  = False
         self.x                        = 0
         self.y                        = 0
-        self.orientation_x            = 0
-        self.orientation_y            = 0
-        self.orientation_z            = 0
-        self.orientation_w            = 0
+        self.theta                    = 0
 
     def callback_odom(self,var):
 
@@ -57,10 +51,6 @@ class Buffer_2():
         self.current_odom = var
 
     def callback(self,arg):
-
-
-
-
 
         #self.voidbuffer = PointCloud() # reset the buffer void
 
@@ -84,10 +74,9 @@ class Buffer_2():
 
                 rot_q  = self.current_odom.pose.pose.orientation
 
-                self.orientation_x   += rot_q.x
-                self.orientation_y   += rot_q.y
-                self.orientation_z   += rot_q.z
-                self.orientation_w   += rot_q.w
+                orientation_list = [rot_q.x, rot_q.y, rot_q.z, rot_q.w]
+                (roll, pitch, yaw) = euler_from_quaternion(orientation_list)
+                self.theta = yaw
 
                 self.pub_PC.publish(self.pointcloud_buffer)
 
@@ -103,22 +92,22 @@ class Buffer_2():
 
                     self.remove_duplicates(self.pointcloud_buffer)
                     #self.sampling(self.pointcloud_buffer)
-                    self.x  = self.x/395
-                    self.y  = self.y/395
-                    self.orientation_x   = self.orientation_x/395
-                    self.orientation_y   = self.orientation_y/395
-                    self.orientation_z   = self.orientation_z/395
-                    self.orientation_w   = self.orientation_w/395
+                    self.x       = self.x/395
+                    self.y       = self.y/395
+                    self.theta   = self.theta
 
 
                     self.final_odom = self.current_odom
 
                     self.final_odom.pose.pose.position.x = self.x
                     self.final_odom.pose.pose.position.y = self.y
-                    self.final_odom.pose.pose.orientation.x = self.orientation_x
-                    self.final_odom.pose.pose.orientation.y = self.orientation_y
-                    self.final_odom.pose.pose.orientation.z = self.orientation_z
-                    self.final_odom.pose.pose.orientation.w = self.orientation_w
+
+                    quat = quaternion_from_euler(0, 0, self.theta)
+
+                    self.final_odom.pose.pose.orientation.x = quat[0]
+                    self.final_odom.pose.pose.orientation.y = quat[1]
+                    self.final_odom.pose.pose.orientation.z = quat[2]
+                    self.final_odom.pose.pose.orientation.w = quat[3]
 
                     self.pub_PC.publish(self.pointcloud_buffer)          # The pointcloud buffer 2 is published
                     self.pub_odom.publish(self.final_odom)
@@ -126,8 +115,6 @@ class Buffer_2():
 
                     self.sampled = True
 
-                #self.pub_PC.publish(self.pointcloud_buffer)          # The pointcloud buffer 2 is published
-                #self.pub_odom.publish(self.final_odom)
 
 
 
