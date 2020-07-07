@@ -20,7 +20,7 @@ class retrive_data():
 
 
 
-        self.sub_pc_source   = rospy.Subscriber('/SLAM/buffer/pointcloud_source', PointCloud, self.callback_source)
+        self.sub_pc_source   = rospy.Subscriber('/SLAM/map', PointCloud, self.callback_source)
         self.sub_pc_target   = rospy.Subscriber('/SLAM/buffer/pointcloud_target', PointCloud, self.callback_target)
 
         self.sub_odom_source = rospy.Subscriber('/SLAM/buffer/odom_source', Odometry, self.callback_odom_source)
@@ -34,19 +34,11 @@ class retrive_data():
         y       = []
         ones    = []
 
-
-
         for i in range(len(var.points)):
 
-            if var.points[i].x == 0 and var.points[i].y == 0:
-
-                pass
-
-            else:
-
-                x.append(var.points[i].x)
-                y.append(var.points[i].y)
-                ones.append(1)
+            x.append(var.points[i].x)
+            y.append(var.points[i].y)
+            ones.append(1)
 
         self.target_PC = np.vstack((x,y,ones)).T
 
@@ -59,18 +51,11 @@ class retrive_data():
         y       = []
         ones    = []
 
-
         for i in range(len(var.points)):
 
-            if var.points[i].x == 0 and var.points[i].y == 0:
-
-                pass
-
-            else:
-
-                x.append(var.points[i].x)
-                y.append(var.points[i].y)
-                ones.append(1)
+            x.append(var.points[i].x)
+            y.append(var.points[i].y)
+            ones.append(1)
 
         self.source_PC = np.vstack((x,y,ones)).T
 

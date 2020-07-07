@@ -19,6 +19,7 @@ class Buffer_2():
 
     def __init__(self):
 
+        self.Timer                    = rospy.get_time()
         self.max_value                = 396
         self.pointcloud_buffer        = PointCloud()
         self.current_odom             = Odometry()
@@ -52,8 +53,6 @@ class Buffer_2():
 
     def callback(self,arg):
 
-        #self.voidbuffer = PointCloud() # reset the buffer void
-
         """
         This callback is made to retrive data from the PointCloud
         """
@@ -63,20 +62,18 @@ class Buffer_2():
         if len(arg.points) != 0: # if the sonar topics gives values
 
 
-            if len(self.pointcloud_buffer.points) < self.max_value: # while the length of the buffer is below 99 values
-
-                #print(len(self.pointcloud_buffer1.points))
+            if rospy.get_time() < self.Timer + 15 : # while the length of the buffer is below 99 values
 
                 self.pointcloud_buffer.points.append(arg.points[0])    # add the new point
-
-                self.x              += self.current_odom.pose.pose.position.x
-                self.y              += self.current_odom.pose.pose.position.y
 
                 rot_q  = self.current_odom.pose.pose.orientation
 
                 orientation_list = [rot_q.x, rot_q.y, rot_q.z, rot_q.w]
                 (roll, pitch, yaw) = euler_from_quaternion(orientation_list)
-                self.theta = yaw
+
+                self.x      += self.current_odom.pose.pose.position.x
+                self.y      += self.current_odom.pose.pose.position.y
+                self.theta  += yaw
 
                 self.pub_PC.publish(self.pointcloud_buffer)
 
@@ -90,7 +87,7 @@ class Buffer_2():
 
                 if self.sampled == False:
 
-                    self.remove_duplicates(self.pointcloud_buffer)
+                    #self.remove_duplicates(self.pointcloud_buffer)
                     #self.sampling(self.pointcloud_buffer)
                     self.x       = self.x/395
                     self.y       = self.y/395
@@ -130,21 +127,38 @@ class Buffer_2():
                     PointCloud.points[k].y = 0
 
 
-
     def sampling(self,PointCloud):
 
         i = 0
+        list = []
 
-        while i < (len(PointCloud.points)):
-            PointCloud.points[i].x = (PointCloud.points[i].x + PointCloud.points[i + 1].x + PointCloud.points[i + 2].x )/3
-            PointCloud.points[i].y = (PointCloud.points[i].y + PointCloud.points[i + 1].y + PointCloud.points[i + 2].y )/3
+        if len(PointCloud.points) % 2 == 1:
 
-            PointCloud.points[i+1].x = PointCloud.points[i+2].x = PointCloud.points[i+1].y = PointCloud.points[i+2].y = 0
-            i = i + 3
+            while i < (len(PointCloud.points-3)):
 
+                PointCloud.points[i].x = (PointCloud.points[i].x + PointCloud.points[i + 1].x + PointCloud.points[i + 2].x )/3
+                PointCloud.points[i].y = (PointCloud.points[i].y + PointCloud.points[i + 1].y + PointCloud.points[i + 2].y )/3
 
+                list.append(i+1)
+                list.append(i+2)
 
+                i = i + 3
 
+        else:
+
+            while i < (len(PointCloud.points)-2):
+                PointCloud.points[i].x = (PointCloud.points[i].x + PointCloud.points[i + 1].x)/2
+                PointCloud.points[i].y = (PointCloud.points[i].y + PointCloud.points[i + 1].y)/2
+
+                list.append(i+1)
+
+                i = i + 2
+
+        list = set(list)
+
+        for i in range(0,len(list)):
+
+            del PointCloud.points[i]
 
 
 def callback(msg):

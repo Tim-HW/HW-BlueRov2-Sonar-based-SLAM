@@ -32,23 +32,14 @@
       <remap from="points2_in" to="/own/simulated/dynamic/sonar_PC2"/>
       <remap from="points_out" to="/own/simulated/dynamic/sonar_PC" />
 
-      <remap from="points_in"   to="/SLAM/buffer/pointcloud_source"/>
-      <remap from="points2_out" to="/SLAM/buffer/pointcloud2_source"/>
-
-    </node>
-
-    <node pkg="point_cloud_converter" name="point_cloud_converter_target" type="point_cloud_converter_target" >
-
-      <remap from="points_in"   to="/SLAM/buffer/pointcloud_target"/>
-      <remap from="points2_out" to="/SLAM/buffer/pointcloud2_target"/>
-
     </node>
 
 
 
 
-    <!-- <node pkg="sonar_mapping" type="buffer_1.py" name="Buffer_1" output="screen"/>-->
-    <node pkg="sonar_mapping" type="buffer_2.py" name="Buffer_2" output="screen"/>
+
+    <node pkg="sonar_mapping" type="mapping.py" name="Mapping" output="screen"/>
+    <node pkg="sonar_mapping" type="buffer_2.py"  name="Buffer_2"  output="screen"/>-
     <!--
     <node pkg="sonar_mapping" type="octomap_launch.py" name="en_Mapping" output="screen"/>
     -->

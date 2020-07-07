@@ -96,9 +96,10 @@ def call_buffer_1():
 
 
     #Function to erased the previous scan of th buffer 1 and collect a new one
-    while(len(pc_source.points) != 396):                         # once empty, wait for the buffer to be filled
+    Timer = rospy.get_time()
+    while rospy.get_time() < Timer + 15 :                         # once empty, wait for the buffer to be filled
         create_buffer_1()                                        # allow the buffer to collect data
-        print"scan 1: ", 100*len(pc_source.points)/396, "%"      # Print the current situation of the buffer
+        print"map initialization: ", int(100*(rospy.get_time() - Timer)/15), "%"      # Print the current situation of the buffer
         rospy.sleep(1)                                           # wait for 1 second
 
     return data.return_source()
@@ -117,10 +118,13 @@ def call_buffer_2():
         delete_buffer_2()            # ask for the buffer to empty it current data
         rospy.sleep(1)               # wait fir 1 second
 
-    while(len(pc_target.points) != 396):                    # once empty, wait for the buffer to be filled
-        create_buffer_2()                                   # allow the buffer to collect data
-        print"scan 2: ", 100*len(pc_target.points)/396, "%" # Print the current situation of the buffer
-        rospy.sleep(1)                                      # wait fir 1 second
+    #Function to erased the previous scan of th buffer 1 and collect a new one
+    Timer = rospy.get_time()
+    while rospy.get_time() < Timer + 15 :                         # once empty, wait for the buffer to be filled
+        create_buffer_2()                                        # allow the buffer to collect data
+        print"scan buffer: ", int(100*(rospy.get_time() - Timer)/15), "%"      # Print the current situation of the buffer
+        rospy.sleep(1)                                           # wait for 1 second
+
 
     return data.return_target()
 
@@ -182,9 +186,6 @@ def from_world2icp(odom,T):
 if __name__ == '__main__':
 
     rospy.init_node('Static_SLAM', anonymous=True) 	# initiate the node
-
-    sub_source   = rospy.Subscriber('/SLAM/buffer/pointcloud_source', PointCloud, callback_source)  # Subscribes to the buffer 1
-    sub_target   = rospy.Subscriber('/SLAM/buffer/pointcloud_target', PointCloud, callback_target)  # Subscribes to the buffer 2
     sub_gt       = rospy.Subscriber('/desistek_saga/pose_gt', Odometry, callback_gt)                   # Subscribes to the Ground Truth pose
 
     pub1         = rospy.Publisher('/SLAM/buffer_1', Bool   , queue_size=1)                                    # Create publisher to enable or disable the buffer 1 [True = enable / False = disable]
@@ -212,8 +213,8 @@ if __name__ == '__main__':
 
             target,odom_target = call_buffer_2() # empty the scan 2 and re-ask for scan
 
-
-
+        print source
+        print target
         T = data.initial_guess()   # initial guess of the transform
 
         #T = from_world2icp(odom_source,T)
