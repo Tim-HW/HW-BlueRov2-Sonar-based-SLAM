@@ -83,11 +83,10 @@ class Mapping():
 
 
         self.sub_sonar                = rospy.Subscriber("/own/simulated/dynamic/sonar_PC"  , PointCloud, self.callback)
-        self.pub_buffer               = rospy.Publisher("/SLAM/buffer/pointcloud_source"    , PointCloud, queue_size = 1)
-        self.pub_map                  = rospy.Publisher("/SLAM/map"                         , PointCloud, queue_size = 1)
         self.sub_odom                 = rospy.Subscriber("/odom"                            , Odometry  , self.callback_odom)
-        self.pub_odom                 = rospy.Publisher("/SLAM/buffer/odom_source"          , Odometry  , queue_size = 1)
 
+        self.pub_odom                 = rospy.Publisher("/SLAM/buffer/odom_source"          , Odometry  , queue_size = 1)
+        self.pub_map                  = rospy.Publisher("/SLAM/map"                         , PointCloud, queue_size = 1)
 
 
     def update(self,pointcloud,T):
@@ -112,14 +111,14 @@ class Mapping():
                 pointcloud.points[i].y = point[1,0]
                 pointcloud.points[i].z = 0
 
-                #self.pointcloud_buffer.points.append(pointcloud.points[i])
+                self.map.points.append(pointcloud.points[i])
 
 
 
 
-    def change_origin(self):
+    def change_origin(self,pointcloud,T):
 
-        T = np.eye(3)
+
         tmp = Point32()
 
         rot_q  = self.final_odom.pose.pose.orientation
@@ -130,16 +129,16 @@ class Mapping():
         x = self.final_odom.pose.pose.position.x
         y = self.final_odom.pose.pose.position.y
 
-        odom = np.array([[x],
-                         [y],
-                         [yaw]])
+        odom = np.array([[x + T[0,2]],
+                         [y + T[1,2]],
+                            [yaw]])
 
 
 
-        for i in range(len(self.map.points)):
+        for i in range(len(pointcloud.points)):
 
             #print(len(self.pointcloud_buffer1.points))
-            tmp_point = self.map.points[i]
+            tmp_point = pointcloud.points[i]
 
 
             tmp_point = from_odom2world(tmp_point,odom)
@@ -155,14 +154,12 @@ class Mapping():
 
     def callback_odom(self,var):
 
-        if self.odom_state == False:
 
-            self.final_odom = var
+        self.final_odom = var
+        self.final_odom.pose.pose.position.x = 0
+        self.final_odom.pose.pose.position.y = 0
 
-            self.final_odom.pose.pose.position.x = -250
-            self.final_odom.pose.pose.position.y = 300
 
-            self.odom_state = True
 
 
     def callback(self,arg):
@@ -203,7 +200,7 @@ class Mapping():
 
 
                 self.map.points.append(point)    # add the new point
-
+                self.pub_odom.publish(self.final_odom)
                 """
                 self.x += self.final_odom.pose.pose.position.x
                 self.y += self.final_odom.pose.pose.position.y
@@ -225,13 +222,10 @@ class Mapping():
                     self.y  = self.y/396
                     """
 
-                    self.final_odom.pose.pose.position.x = -250
-                    self.final_odom.pose.pose.position.y = 300
 
+                    #self.change_origin()
 
-                    self.change_origin()
-
-                    self.pub_buffer.publish(self.map)
+                    self.pub_map.publish(self.map)
                     self.pub_odom.publish(self.final_odom)
 
                     self.sampled = True
@@ -287,6 +281,20 @@ class Mapping():
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def callback_T(msg):
 
 
@@ -317,15 +325,6 @@ def callback(msg):
 
 
 
-def callback_odom_target(msg):
-
-    global target_odom
-
-    odom_target[0,0] = msg.pose.pose.position.x
-    odom_target[1,0] = msg.pose.pose.position.y
-    odom_target[2,0] = 1
-
-
 
 
 if __name__ == '__main__':
@@ -334,7 +333,7 @@ if __name__ == '__main__':
 
     sub1 = rospy.Subscriber('/SLAM/buffer/pointcloud_target', PointCloud, callback_pc)
     sub2 = rospy.Subscriber('/SLAM/T'                       , my_msg    , callback_T)
-    sub3 = rospy.Subscriber('/SLAM/buffer/odom_target'      , Odometry  , callback_odom_target)
+
 
 
     initialization = True
@@ -346,17 +345,15 @@ if __name__ == '__main__':
 
 
 
-
-
         if state == False:
 
-            sub4 = rospy.Subscriber('/SLAM/buffer_1', Bool, callback)
+            sub3 = rospy.Subscriber('/SLAM/buffer_1', Bool, callback)
 
             if initialization == False:
 
                 if update == False:
 
-                    Mapping.update(target_PC,T)
+                    map.change_origin(target_PC,T)
                     update = True
 
 
@@ -366,5 +363,5 @@ if __name__ == '__main__':
 
             if initialization == True:
                 map = Mapping()
-                print "Map created"
+                print "\nMap created\n"
                 initialization = False

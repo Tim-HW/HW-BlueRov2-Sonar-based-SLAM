@@ -15,7 +15,7 @@ from tf.transformations import euler_from_quaternion, quaternion_from_euler
 state = False
 
 
-class Buffer_2():
+class Buffer():
 
     def __init__(self):
 
@@ -48,8 +48,8 @@ class Buffer_2():
 
     def callback_odom(self,var):
 
-        #print(len(self.pointcloud_buffer1.points))
         self.current_odom = var
+
 
     def callback(self,arg):
 
@@ -71,6 +71,7 @@ class Buffer_2():
                 orientation_list = [rot_q.x, rot_q.y, rot_q.z, rot_q.w]
                 (roll, pitch, yaw) = euler_from_quaternion(orientation_list)
 
+
                 self.x      += self.current_odom.pose.pose.position.x
                 self.y      += self.current_odom.pose.pose.position.y
                 self.theta  += yaw
@@ -89,10 +90,11 @@ class Buffer_2():
 
                     #self.remove_duplicates(self.pointcloud_buffer)
                     #self.sampling(self.pointcloud_buffer)
-                    self.x       = self.x/395
-                    self.y       = self.y/395
-                    self.theta   = self.theta
+                    self.x       = self.x/len(self.pointcloud_buffer.points)
+                    self.y       = self.y/len(self.pointcloud_buffer.points)
+                    self.theta   = self.theta/len(self.pointcloud_buffer.points)
 
+                    
 
                     self.final_odom = self.current_odom
 
@@ -161,16 +163,21 @@ class Buffer_2():
             del PointCloud.points[i]
 
 
+
+
 def callback(msg):
     global state
     state = msg.data
+
+
+
 
 
 if __name__ == '__main__':
 
 
 
-    rospy.init_node('Buffer_2', anonymous=True)
+    rospy.init_node('Buffer', anonymous=True)
     initialization = True
 
     while not rospy.is_shutdown():
@@ -185,6 +192,6 @@ if __name__ == '__main__':
 
         elif state == True:
             if initialization == True:
-                buffer = Buffer_2()
-                print "buffer 2 created"
+                buffer = Buffer()
+                print "buffer created"
                 initialization = False

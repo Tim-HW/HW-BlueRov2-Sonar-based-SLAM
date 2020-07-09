@@ -98,9 +98,11 @@ def call_buffer_1():
     #Function to erased the previous scan of th buffer 1 and collect a new one
     Timer = rospy.get_time()
     while rospy.get_time() < Timer + 15 :                         # once empty, wait for the buffer to be filled
+                                    # wait for 1 second
         create_buffer_1()                                        # allow the buffer to collect data
+        rospy.sleep(1)
         print"map initialization: ", int(100*(rospy.get_time() - Timer)/15), "%"      # Print the current situation of the buffer
-        rospy.sleep(1)                                           # wait for 1 second
+
 
     return data.return_source()
 
@@ -111,7 +113,7 @@ def call_buffer_2():
     #Function to erased the previous scan of th buffer 2 and collect a new one
 
 
-    raw_input("would you like to process second scan ? [ENTER]") # ask you the permition to execute the second scan
+    raw_input("\nwould you like to process second scan ? [ENTER]\n") # ask you the permition to execute the second scan
 
     while len(pc_target.points) > 2: # while the buffer is not empty
 
@@ -121,9 +123,11 @@ def call_buffer_2():
     #Function to erased the previous scan of th buffer 1 and collect a new one
     Timer = rospy.get_time()
     while rospy.get_time() < Timer + 15 :                         # once empty, wait for the buffer to be filled
+
         create_buffer_2()                                        # allow the buffer to collect data
+        rospy.sleep(1)
         print"scan buffer: ", int(100*(rospy.get_time() - Timer)/15), "%"      # Print the current situation of the buffer
-        rospy.sleep(1)                                           # wait for 1 second
+                                 # wait for 1 second
 
 
     return data.return_target()
@@ -157,7 +161,6 @@ def from_icp2world(odom,point):
 
 
 
-
 def from_world2icp(odom,T):
 
     point = np.zeros((3,1))
@@ -167,9 +170,9 @@ def from_world2icp(odom,T):
     point[2,0] =   1
 
 
-    tmp = np.array([[np.cos(-odom[2,0])  , np.sin(-odom[2,0]) , 0],
+    tmp = np.array([[ np.cos(-odom[2,0]) , np.sin(-odom[2,0]) , 0],
                     [-np.sin(-odom[2,0]) , np.cos(-odom[2,0]) , 0],
-                    [        0          ,             0     , 1],])
+                    [        0           ,          0         , 1],])
 
     point = np.dot(tmp,point)
 
@@ -183,28 +186,31 @@ def from_world2icp(odom,T):
     return T
 
 
+
+
+
 if __name__ == '__main__':
 
     rospy.init_node('Static_SLAM', anonymous=True) 	# initiate the node
-    sub_gt       = rospy.Subscriber('/desistek_saga/pose_gt', Odometry, callback_gt)                   # Subscribes to the Ground Truth pose
+    sub_gt       = rospy.Subscriber('/desistek_saga/pose_gt', Odometry, callback_gt) # Subscribes to the Ground Truth pose
 
-    pub1         = rospy.Publisher('/SLAM/buffer_1', Bool   , queue_size=1)                                    # Create publisher to enable or disable the buffer 1 [True = enable / False = disable]
-    pub2         = rospy.Publisher('/SLAM/buffer_2', Bool   , queue_size=1)                                    # Create publisher to enable or disable the buffer 2 [True = enable / False = disable]
+    pub1         = rospy.Publisher('/SLAM/buffer_1', Bool   , queue_size=1) # Create publisher to enable or disable the buffer 1 [True = enable / False = disable]
+    pub2         = rospy.Publisher('/SLAM/buffer_2', Bool   , queue_size=1) # Create publisher to enable or disable the buffer 2 [True = enable / False = disable]
     pub_odom     = rospy.Publisher('/SLAM/offset'  , my_msg , queue_size=1)
     pub_T        = rospy.Publisher('/SLAM/T'       , my_msg , queue_size=1)
 
     data = retrive_data() # create the class to retrive the data from the scans
     kf = KF()             # create the Kalman Filter
     initialization = True # initialization variable
-    error = 0.0001                                                                       # initiate the counter
+    error = 0.0001        # initiate the counter
 
 
     while not rospy.is_shutdown():
 
 
-
         if initialization == True:
 
+            raw_input("initialization map ?")
             source,odom_source = call_buffer_1() # ask the buffer 1 to scan
 
             target,odom_target = call_buffer_2() # ask the buffer 2 to scan
@@ -213,12 +219,14 @@ if __name__ == '__main__':
 
             target,odom_target = call_buffer_2() # empty the scan 2 and re-ask for scan
 
-        print source
-        print target
-        T = data.initial_guess()   # initial guess of the transform
+        #print source
+        #print target
 
+        T = data.initial_guess()   # initial guess of the transform
+        T = np.eye(3)
         #T = from_world2icp(odom_source,T)
-        print(T)
+
+        #print(T)
         ICP = Align2D(source,target,T)               # create an ICP object
 
         observation,error = ICP.transform                  # get the position according to the ICP
@@ -226,8 +234,8 @@ if __name__ == '__main__':
 
         while error > 0.1:  # if the error is too high
 
-            print "The ICP error is :", error                                                                               # display the error
-            answer = raw_input("would you like to continue or re-scan the environment ([Y] : continue / [N] : re-scan)")    # asking you what to do
+            print "\n The ICP error is :", error, "\n"                                                                               # display the error
+            answer = raw_input("\nwould you like to continue or re-scan the environment ([Y] : continue / [N] : re-scan)\n")    # asking you what to do
 
             if answer == "Y":       # if you want to continue the error becomes 0 and you escape the loop
 
@@ -247,19 +255,21 @@ if __name__ == '__main__':
 
 
 
-        print "Output ICP :\n",observation
+        print "\nOutput ICP :\n",observation
 
         # transform the 3x3 matrix into a 3x1 matrix
+
 
         observation = np.array([[observation[0,2]],                 # x
                                 [observation[1,2]],                 # y
                                 [np.arccos(observation[0,0])]])     # theta
 
+        offset_update = from_icp2world(odom_source,observation)
 
         msg = my_msg()              # create msg type
-        msg.x     = -observation[0,0]   # offset in x
-        msg.y     = -observation[1,0]   # offset in y
-        msg.theta = observation[2,0]   # offset in theta
+        msg.x     = offset_update[0,0]   # offset in x
+        msg.y     = offset_update[1,0]   # offset in y
+        msg.theta = offset_update[2,0]   # offset in theta
         pub_T.publish(msg)       # publish the offset
 
 

@@ -10,8 +10,8 @@
 
 
     <include file="$(find desistek_saga_gazebo)/launch/start_demo_nmb_sm_controller.launch">
-      <arg name="x" value="-250"/>
-      <arg name="y" value="300"/>
+      <arg name="x" value="0"/>
+      <arg name="y" value="0"/>
       <arg name="z" value="-5"/>
       <arg name="yaw" value="-1.0"/>
       <arg name="joy_id" value="0"/>
@@ -32,6 +32,9 @@
       <remap from="points2_in" to="/own/simulated/dynamic/sonar_PC2"/>
       <remap from="points_out" to="/own/simulated/dynamic/sonar_PC" />
 
+      <remap from="points_in" to="/SLAM/map"/>
+      <remap from="points2_out" to="/SLAM/map_PC2" />
+
     </node>
 
 
@@ -39,7 +42,7 @@
 
 
     <node pkg="sonar_mapping" type="mapping.py" name="Mapping" output="screen"/>
-    <node pkg="sonar_mapping" type="buffer_2.py"  name="Buffer_2"  output="screen"/>-
+    <node pkg="sonar_mapping" type="buffer.py"  name="Buffer"  output="screen"/>-
     <!--
     <node pkg="sonar_mapping" type="octomap_launch.py" name="en_Mapping" output="screen"/>
     -->
@@ -55,7 +58,7 @@
       <param name="sensor_model/max_range" value="75.0" />
 
       <!-- data source to integrate (PointCloud2) -->
-      <remap from="cloud_in" to="/own/simulated/dynamic/sonar_PC2" />
+      <remap from="cloud_in" to="/SLAM/map_PC2" />
 
     </node>
 

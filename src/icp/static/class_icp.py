@@ -31,7 +31,7 @@ class Align2D:
 	#   min_delta_err: float, minimum change in alignment error
 
 	def AlignICP(self, max_iter, min_delta_err):
-		
+
 		plt.figure()
 		plt.subplot(221)
 		plt.plot(self.source[:,0],self.source[:,1], 'or')
@@ -91,6 +91,7 @@ class Align2D:
 
 		print'\n number of iteration:', num_iter
 		plt.subplot(223)
+
 		plt.plot(tf_source[:,0],tf_source[:,1], 'or')
 		plt.plot(self.target[:,0],self.target[:,1], 'ob')
 		plt.title("after ICP")

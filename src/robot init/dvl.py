@@ -50,8 +50,8 @@ class dvl:
 		self.OFFSET_Y = 0
 		self.OFFSET_Z = 0
 
-		self.STARTING_X = -250
-		self.STARTING_Y = 300
+		self.STARTING_X = 0
+		self.STARTING_Y = 0
 		self.STARTING_Z = -5
 		self.STARTING_radianX = 3.1415/4
 		self.STARTING_radianY = 0
