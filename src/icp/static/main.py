@@ -101,7 +101,7 @@ def call_buffer_1():
                                     # wait for 1 second
         create_buffer_1()                                        # allow the buffer to collect data
         rospy.sleep(1)
-        print"map initialization: ", int(100*(rospy.get_time() - Timer)/15), "%"      # Print the current situation of the buffer
+        print"   # map initialization: ", int(100*(rospy.get_time() - Timer)/15), "%"      # Print the current situation of the buffer
 
 
     return data.return_source()
@@ -113,20 +113,20 @@ def call_buffer_2():
     #Function to erased the previous scan of th buffer 2 and collect a new one
 
 
-    raw_input("\nwould you like to process second scan ? [ENTER]\n") # ask you the permition to execute the second scan
-    
+    raw_input("\n           would you like to process second scan ? [ENTER]\n") # ask you the permition to execute the second scan
+    """
     while len(pc_target.points) > 2: # while the buffer is not empty
 
         delete_buffer_2()            # ask for the buffer to empty it current data
         rospy.sleep(1)               # wait fir 1 second
-
+    """
     #Function to erased the previous scan of th buffer 1 and collect a new one
     Timer = rospy.get_time()
-    while rospy.get_time() < Timer + 15 :                         # once empty, wait for the buffer to be filled
+    while rospy.get_time() < Timer + 15:                         # once empty, wait for the buffer to be filled
 
         create_buffer_2()                                        # allow the buffer to collect data
         rospy.sleep(1)
-        print"scan buffer: ", int(100*(rospy.get_time() - Timer)/15), "%"      # Print the current situation of the buffer
+        print"   # scan buffer: ", int(100*(rospy.get_time() - Timer)/15), "%"      # Print the current situation of the buffer
                                  # wait for 1 second
 
 
@@ -217,7 +217,7 @@ if __name__ == '__main__':
     initialization = True # initialization variable
     error = 0.0001        # initiate the counter
 
-    rospy.sleep(5)
+    rospy.sleep(4)
 
     while not rospy.is_shutdown():
 
@@ -233,33 +233,64 @@ if __name__ == '__main__':
             print "   # Departement : Engineering & Physical Departement                                #"
             print "   # University : Heriot Watt - Edinburgh                                            #"
             print "   ###################################################################################"
+            print " "
+            print "   ###################################################################################"
+            print "   #                           Mapping initialization                                #"
+            print "   ###################################################################################"
+            print " "
 
-            raw_input("\ninitialization map ? [ENTER]")
+            raw_input("\n            Would you like to initialize the map here ? [ENTER]")
+
             source,odom_source = call_buffer_1() # ask the buffer 1 to scan
+
+            print " "
+            print "   ###################################################################################"
+            print "   #                                   SCAN                                          #"
+            print "   ###################################################################################"
 
             target,odom_target = call_buffer_2() # ask the buffer 2 to scan
 
         if initialization == False:
 
+            print " "
+            print "   ###################################################################################"
+            print "   #                                   SCAN                                          #"
+            print "   ###################################################################################"
+
             target,odom_target = call_buffer_2() # empty the scan 2 and re-ask for scan
 
-        print len(source)
-        print len(target)
+        print "   # Number of points in the map    :",len(source)
+        print "   # Number of points in the buffer :",len(target)
 
         T = data.initial_guess()   # initial guess of the transform
         T = np.eye(3)
         #T = from_world2icp(odom_source,T)
 
         #print(T)
+
+        print " "
+        print "   ###################################################################################"
+        print "   #                                   ICP                                           #"
+        print "   ###################################################################################"
+
+
+
         ICP = Align2D(source,target,T)               # create an ICP object
 
         observation,error = ICP.transform                  # get the position according to the ICP
 
 
+
         while error > 0.1:  # if the error is too high
 
-            print "\n The ICP error is :", error, "\n"                                                                               # display the error
-            answer = raw_input("\nwould you like to continue or re-scan the environment ([Y] : continue / [N] : re-scan)\n")    # asking you what to do
+            print " "
+            print "   ###################################################################################"
+            print "   #                                   ICP                                           #"
+            print "   ###################################################################################"
+
+            print "\n   # The ICP error is :", error, "\n"
+                                                                                         # display the error
+            answer = raw_input("\n           would you like to continue or re-scan the environment ([Y] : continue / [N] : re-scan)\n")    # asking you what to do
 
             if answer == "Y":       # if you want to continue the error becomes 0 and you escape the loop
 

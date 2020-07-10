@@ -74,7 +74,6 @@ class Mapping():
 
         self.timer                    = rospy.get_time()
         self.final_odom               = Odometry()
-
         self.odom_state               = False
         self.sampled                  = False
         self.x                        = 0
@@ -160,8 +159,6 @@ class Mapping():
         self.final_odom.pose.pose.position.y = 300
 
 
-
-
     def callback(self,arg):
 
         point = Point32()
@@ -201,13 +198,7 @@ class Mapping():
 
                 self.map.points.append(point)    # add the new point
                 self.pub_odom.publish(self.final_odom)
-                """
-                self.x += self.final_odom.pose.pose.position.x
-                self.y += self.final_odom.pose.pose.position.y
 
-
-                self.theta += yaw
-                """
 
             else:   # if the buffer is full
 
@@ -217,13 +208,6 @@ class Mapping():
 
                     self.remove_duplicates(self.map)
                     #self.sampling(self.pointcloud_buffer)
-                    """
-                    self.x  = self.x/396
-                    self.y  = self.y/396
-                    """
-
-
-                    #self.change_origin()
 
                     self.pub_map.publish(self.map)
                     self.pub_odom.publish(self.final_odom)
@@ -370,7 +354,8 @@ if __name__ == '__main__':
 
                 if update == False:
 
-                    map.change_origin(target_PC,T)
+                    #map.change_origin(target_PC,T)
+                    print " --- map updated ---"
                     update = True
 
 
@@ -380,5 +365,5 @@ if __name__ == '__main__':
 
             if initialization == True:
                 map = Mapping()
-                print "\nMap created\n"
+                print "\n   ############################### Map Created #######################################\n"
                 initialization = False

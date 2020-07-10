@@ -238,5 +238,5 @@ if __name__ == '__main__':
             if initialization == True:
 
                 buffer = Buffer()
-                print "buffer created"
+                print "\n   ############################## Buffer  Created ####################################\n"
                 initialization = False
