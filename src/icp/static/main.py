@@ -20,7 +20,7 @@ from class_retrive_data import retrive_data
 
 
 
-pc_source = PointCloud()
+
 pc_target = PointCloud()
 odom_gt   = np.zeros((3,1))
 
@@ -114,7 +114,7 @@ def call_buffer_2():
 
 
     raw_input("\nwould you like to process second scan ? [ENTER]\n") # ask you the permition to execute the second scan
-
+    
     while len(pc_target.points) > 2: # while the buffer is not empty
 
         delete_buffer_2()            # ask for the buffer to empty it current data
@@ -188,11 +188,24 @@ def from_world2icp(odom,T):
 
 
 
+def callback_target(var):
+
+    global pc_target
+
+    pc_target = var
+
+
+
+
+
+
+
 
 if __name__ == '__main__':
 
     rospy.init_node('Static_SLAM', anonymous=True) 	# initiate the node
-    sub_gt       = rospy.Subscriber('/desistek_saga/pose_gt', Odometry, callback_gt) # Subscribes to the Ground Truth pose
+    sub_gt       = rospy.Subscriber('/desistek_saga/pose_gt'        , Odometry  , callback_gt) # Subscribes to the Ground Truth pose
+    sub_target   = rospy.Subscriber('/SLAM/buffer/pointcloud_target', PointCloud, callback_target) # Subscribes to the Ground Truth pose
 
     pub1         = rospy.Publisher('/SLAM/buffer_1', Bool   , queue_size=1) # Create publisher to enable or disable the buffer 1 [True = enable / False = disable]
     pub2         = rospy.Publisher('/SLAM/buffer_2', Bool   , queue_size=1) # Create publisher to enable or disable the buffer 2 [True = enable / False = disable]
@@ -204,13 +217,24 @@ if __name__ == '__main__':
     initialization = True # initialization variable
     error = 0.0001        # initiate the counter
 
+    rospy.sleep(5)
 
     while not rospy.is_shutdown():
 
 
         if initialization == True:
 
-            raw_input("initialization map ?")
+            print " "
+            print "   ###################################################################################"
+            print "   #                      BLUEROV2 - ICP-Static_SLAM                                 #"
+            print "   ###################################################################################"
+            print "   # Author : Timothee Freville                                                      #"
+            print "   # Supervisor : Yvan Petillot                                                      #"
+            print "   # Departement : Engineering & Physical Departement                                #"
+            print "   # University : Heriot Watt - Edinburgh                                            #"
+            print "   ###################################################################################"
+
+            raw_input("\ninitialization map ? [ENTER]")
             source,odom_source = call_buffer_1() # ask the buffer 1 to scan
 
             target,odom_target = call_buffer_2() # ask the buffer 2 to scan
@@ -219,8 +243,8 @@ if __name__ == '__main__':
 
             target,odom_target = call_buffer_2() # empty the scan 2 and re-ask for scan
 
-        #print source
-        #print target
+        print len(source)
+        print len(target)
 
         T = data.initial_guess()   # initial guess of the transform
         T = np.eye(3)

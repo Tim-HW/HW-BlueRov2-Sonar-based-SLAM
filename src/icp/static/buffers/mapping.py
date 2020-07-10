@@ -156,8 +156,8 @@ class Mapping():
 
 
         self.final_odom = var
-        self.final_odom.pose.pose.position.x = 0
-        self.final_odom.pose.pose.position.y = 0
+        self.final_odom.pose.pose.position.x = -250
+        self.final_odom.pose.pose.position.y = 300
 
 
 
@@ -215,7 +215,7 @@ class Mapping():
 
                 if self.sampled == False:
 
-                    #self.remove_duplicates(self.pointcloud_buffer)
+                    self.remove_duplicates(self.map)
                     #self.sampling(self.pointcloud_buffer)
                     """
                     self.x  = self.x/396
@@ -234,16 +234,33 @@ class Mapping():
         self.pub_odom.publish(self.final_odom)
 
 
+
+
     def remove_duplicates(self,PointCloud):
 
-        threshold = 1.0
+        ##################################################################################
+        #
+        #   Function the remove remove_duplicates from a PointCloud
+        #
+        ##################################################################################
 
-        for i in range(0,int(len(PointCloud.points)/2)):
-            for k in range(int(len(PointCloud.points)/2),len(PointCloud.points)):
+        threshold = 1.0         # this values means that the threshold value is at 1m
+        list = []
 
-                if np.abs(PointCloud.points[i].x - PointCloud.points[k].x) < threshold and np.abs(PointCloud.points[i].y - PointCloud.points[k].y) < threshold:
-                    PointCloud.points[k].x = 0
-                    PointCloud.points[k].y = 0
+        for i in range(0,int(len(PointCloud.points)/2)): # for half of the values
+            for k in range(int(len(PointCloud.points)/2),len(PointCloud.points)): # for the other half of the other values
+
+                if np.abs(PointCloud.points[i].x - PointCloud.points[k].x) < threshold and np.abs(PointCloud.points[i].y - PointCloud.points[k].y) < threshold: # if the point i is at least than 1m from the point k
+
+                    list.append(k) # add in a list the value of k
+
+        list = set(list) # organise the list (increasing values) and remove duplicates
+
+        for i in range(0,len(list)):    # for every values in the list
+
+            del PointCloud.points[i]    # removes the point
+
+
 
 
     def sampling(self,PointCloud):

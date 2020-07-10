@@ -10,8 +10,8 @@
 
 
     <include file="$(find desistek_saga_gazebo)/launch/start_demo_nmb_sm_controller.launch">
-      <arg name="x" value="0"/>
-      <arg name="y" value="0"/>
+      <arg name="x" value="-250"/>
+      <arg name="y" value="300"/>
       <arg name="z" value="-5"/>
       <arg name="yaw" value="-1.0"/>
       <arg name="joy_id" value="0"/>
