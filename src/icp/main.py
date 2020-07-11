@@ -11,6 +11,7 @@ from geometry_msgs.msg import Quaternion
 from tf.transformations import euler_from_quaternion
 from tf.transformations import quaternion_from_euler
 from sonar_mapping.msg import my_msg
+import matplotlib.pyplot as plt
 
 from class_icp import Align2D
 from class_KF import KF
@@ -97,7 +98,7 @@ def call_buffer_1():
 
     #Function to erased the previous scan of th buffer 1 and collect a new one
     Timer = rospy.get_time()
-    while rospy.get_time() < Timer + 15 :                         # once empty, wait for the buffer to be filled
+    while rospy.get_time() < Timer + 12 :                         # once empty, wait for the buffer to be filled
                                     # wait for 1 second
         create_buffer_1()                                        # allow the buffer to collect data
         rospy.sleep(1)
@@ -113,13 +114,14 @@ def call_buffer_2():
     #Function to erased the previous scan of th buffer 2 and collect a new one
 
 
-    raw_input("\n           would you like to process second scan ? [ENTER]\n") # ask you the permition to execute the second scan
-    """
-    while len(pc_target.points) > 2: # while the buffer is not empty
+    raw_input("\n      would you like to process the scan ? [ENTER]\n") # ask you the permition to execute the second scan
 
-        delete_buffer_2()            # ask for the buffer to empty it current data
-        rospy.sleep(1)               # wait fir 1 second
-    """
+    print "\n   ############################## Buffer  Cleared ####################################\n"
+
+
+    delete_buffer_2()            # ask for the buffer to empty it current data
+    rospy.sleep(1)
+
     #Function to erased the previous scan of th buffer 1 and collect a new one
     Timer = rospy.get_time()
     while rospy.get_time() < Timer + 15:                         # once empty, wait for the buffer to be filled
@@ -226,13 +228,29 @@ if __name__ == '__main__':
 
             print " "
             print "   ###################################################################################"
-            print "   #                      BLUEROV2 - ICP-Static_SLAM                                 #"
+            print "   #                             BLUEROV2 - ICP-SLAM                                 #"
             print "   ###################################################################################"
             print "   # Author : Timothee Freville                                                      #"
             print "   # Supervisor : Yvan Petillot                                                      #"
             print "   # Departement : Engineering & Physical Departement                                #"
             print "   # University : Heriot Watt - Edinburgh                                            #"
+            print "   # Github : https://github.com/Tim-HW/Tim-HW-BlueRov2_Sonar_based_SLAM-            #"
             print "   ###################################################################################"
+            print "   # The project was created for a Msc Robotics final thesis.                        #"
+            print "   # The idea was to implemente a robust sonar-base SLAM method for underwater ROV.  #"
+            print "   # To achived this we used the an ICP method coupled with a Kalman Filter for the  #"
+            print "   # Localization and octomap server for the Mapping method.                         #"
+            print "   ###################################################################################"
+            print " "
+
+            answer = raw_input("\n    Do you want to launch the Static or Dynamic SLAM ? Static : [S] / Dynamic : [D]")
+
+            if answer == 'S':
+
+                print "\n   ################################ SLAM : Static ####################################\n"
+            else:
+                print "\n   ################################ SLAM : Dynamic ###################################\n"
+
             print " "
             print "   ###################################################################################"
             print "   #                           Mapping initialization                                #"
@@ -259,8 +277,6 @@ if __name__ == '__main__':
 
             target,odom_target = call_buffer_2() # empty the scan 2 and re-ask for scan
 
-        print "   # Number of points in the map    :",len(source)
-        print "   # Number of points in the buffer :",len(target)
 
         T = data.initial_guess()   # initial guess of the transform
         T = np.eye(3)
@@ -273,12 +289,13 @@ if __name__ == '__main__':
         print "   #                                   ICP                                           #"
         print "   ###################################################################################"
 
-
+        print "\n   # Number of points in the map    :",len(source)
+        print "\n   # Number of points in the buffer :",len(target)
+        print " "
 
         ICP = Align2D(source,target,T)               # create an ICP object
 
         observation,error = ICP.transform                  # get the position according to the ICP
-
 
 
         while error > 0.1:  # if the error is too high
@@ -356,5 +373,6 @@ if __name__ == '__main__':
         pub_odom.publish(msg)       # publish the offset
 
         delete_buffer_1()
-
+        rospy.sleep(1)
+        create_buffer_1()
         initialization = False      # change the case

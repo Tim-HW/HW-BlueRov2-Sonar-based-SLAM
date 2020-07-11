@@ -65,7 +65,9 @@ def from_odom2world(point,odom):
 
 class Mapping():
 
+
     def __init__(self):
+
 
         self.map                      = PointCloud()
         self.map.header.stamp.secs    = int(rospy.get_time())
@@ -74,7 +76,6 @@ class Mapping():
 
         self.timer                    = rospy.get_time()
         self.final_odom               = Odometry()
-        self.odom_state               = False
         self.sampled                  = False
         self.x                        = 0
         self.y                        = 0
@@ -88,9 +89,11 @@ class Mapping():
         self.pub_map                  = rospy.Publisher("/SLAM/map"                         , PointCloud, queue_size = 1)
 
 
+
+
+
+
     def update(self,pointcloud,T):
-
-
 
         point = np.zeros((3,1))
 
@@ -105,12 +108,13 @@ class Mapping():
 
                 point = np.dot(T,point)
 
-
                 pointcloud.points[i].x = point[0,0]
                 pointcloud.points[i].y = point[1,0]
                 pointcloud.points[i].z = 0
 
                 self.map.points.append(pointcloud.points[i])
+
+
 
 
 
@@ -157,6 +161,9 @@ class Mapping():
         self.final_odom = var
         self.final_odom.pose.pose.position.x = -250
         self.final_odom.pose.pose.position.y = 300
+
+
+
 
 
     def callback(self,arg):
@@ -214,8 +221,14 @@ class Mapping():
 
                     self.sampled = True
 
-        self.pub_map.publish(self.map)
-        self.pub_odom.publish(self.final_odom)
+        try:
+            self.pub_map.publish(self.map)
+            self.pub_odom.publish(self.final_odom)
+        except AttributeError:
+            pass
+
+
+
 
 
 
@@ -243,6 +256,8 @@ class Mapping():
         for i in range(0,len(list)):    # for every values in the list
 
             del PointCloud.points[i]    # removes the point
+
+
 
 
 
@@ -354,8 +369,8 @@ if __name__ == '__main__':
 
                 if update == False:
 
-                    #map.change_origin(target_PC,T)
-                    print " --- map updated ---"
+                    map.change_origin(target_PC,T)
+                    print "\n   ############################### Map Updated #######################################\n"
                     update = True
 
 

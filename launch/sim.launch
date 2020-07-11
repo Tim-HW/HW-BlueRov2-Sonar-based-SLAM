@@ -42,10 +42,8 @@
 
 
     <node pkg="sonar_mapping" type="mapping.py" name="Mapping" output="screen"/>
-    <node pkg="sonar_mapping" type="buffer.py"  name="Buffer"  output="screen"/>-
-    <!--
-    <node pkg="sonar_mapping" type="octomap_launch.py" name="en_Mapping" output="screen"/>
-    -->
+    <node pkg="sonar_mapping" type="static_buffer.py"  name="Static_Buffer"  output="screen"/>-
+
 
     <node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
 

@@ -41,9 +41,7 @@ class Buffer():
     def clear(self):
 
         ##################################################################################
-        #
         #   Function to clear the cache from previous values
-        #
         ##################################################################################
 
         self.pointcloud_buffer                      = PointCloud()
@@ -62,9 +60,7 @@ class Buffer():
     def callback_odom(self,var):
 
         ##################################################################################
-        #
         #   Function retrive the current Odometry
-        #
         ##################################################################################
 
         self.current_odom = var
@@ -72,20 +68,14 @@ class Buffer():
 
     def callback(self,arg):
 
-
         ##################################################################################
-        #
         #   Function retrive the current Odometry
-        #
         ##################################################################################
-
-
-
 
         if len(arg.points) != 0: # if the sonar topics is not empty
 
 
-            if rospy.get_time() < self.Timer + 15 :   # during 15 second
+            if rospy.get_time() < self.Timer + 12 :   # during 15 second
 
                 self.pointcloud_buffer.points.append(arg.points[0])           # the buffer will gather new points
 
@@ -149,9 +139,7 @@ class Buffer():
     def remove_duplicates(self,PointCloud):
 
         ##################################################################################
-        #
         #   Function the remove remove_duplicates from a PointCloud
-        #
         ##################################################################################
 
         threshold = 1.0         # this values means that the threshold value is at 1m
@@ -220,18 +208,19 @@ if __name__ == '__main__':
 
 
 
-    rospy.init_node('Buffer', anonymous=True)
+    rospy.init_node('Static_Buffer', anonymous=True)
+
     initialization = True
-    printing       = False
+
     while not rospy.is_shutdown():
 
 
         if state == False:
             sub = rospy.Subscriber('/SLAM/buffer_2', Bool, callback)
-            try:
+            if initialization == False:
                 buffer.clear()
-            except AttributeError:
-                pass
+                rospy.sleep(1)
+
 
 
         elif state == True:

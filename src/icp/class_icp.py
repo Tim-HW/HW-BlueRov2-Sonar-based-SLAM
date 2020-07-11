@@ -48,7 +48,6 @@ class Align2D:
 		plt.title("After initial guess")
 
 
-
 		mean_sq_error = 1.0e6 # initialize error as large number
 		delta_err = 1.0e6    # change in error (used in stopping condition)
 		T = self.init_T
@@ -100,7 +99,7 @@ class Align2D:
 
 		print "   # error of ICP: ",new_err
 
-		#T = np.array([[T[0,2]],[T[1,2]],[np.arccos(T[0,0])]])   # create a 3x1 matrix with (x,y,theta)
+
 		return T,new_err
 
 	# finds nearest neighbors in the target point for all points
