@@ -29,7 +29,7 @@ def callback(arg):
 if __name__ == "__main__":
 
     rospy.init_node("sonar_dynamic")                                                        # initialization of the node
-    pub = rospy.Publisher("/own/simulated/dynamic/sonar_LS", LaserScan, queue_size=1)       # initialization of the final publisher
+    pub = rospy.Publisher("/sonar/LS", LaserScan, queue_size=1)       # initialization of the final publisher
 
     while not rospy.is_shutdown():
 

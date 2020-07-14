@@ -21,46 +21,41 @@
 
       <!-- launch simulated sonar -->
     <!--  <node pkg="sonar_mapping" type="sonar_simulation.py" name="sonar" output="screen"/>-->
-    <node pkg="sonar_mapping" type="sonar_simulation_dynamic.py" name="sonar_dynamic" output="screen"/>
+    <node pkg="sonar_mapping"         type="sonar_simulation_dynamic.py" name="sonar_dynamic" output="screen"/>
 
-    <node pkg="sonar_mapping" type="dvl.py" name="read_dvl" output="screen"/>
+    <node pkg="sonar_mapping"         type="dvl.py"                      name="read_dvl" output="screen"/>
       <!-- launch conversion Laserscan - pointcloud2 -->
-    <node pkg="sonar_mapping" type="laserscan_to_poincloud.py" name="laser_to_cloud" output="screen"/>
+    <node pkg="sonar_mapping"         type="laserscan_to_poincloud.py"   name="laser_to_cloud" output="screen"/>
     <!-- converte the pointcloud into pointcloud2 -->
-    <node pkg="point_cloud_converter" name="point_cloud_converter" type="point_cloud_converter_node" >
+    <node pkg="point_cloud_converter" name="point_cloud_converter"       type="point_cloud_converter_node" >
 
-      <remap from="points2_in" to="/own/simulated/dynamic/sonar_PC2"/>
-      <remap from="points_out" to="/own/simulated/dynamic/sonar_PC" />
+      <remap from="points2_in"  to="/sonar/PC2"/>
+      <remap from="points_out"  to="/sonar/PC" />
 
-      <remap from="points_in" to="/SLAM/map"/>
+      <remap from="points_in"   to="/SLAM/map"/>
       <remap from="points2_out" to="/SLAM/map_PC2" />
 
     </node>
-
-
-
-
-
-    <node pkg="sonar_mapping" type="mapping.py" name="Mapping" output="screen"/>
-    <node pkg="sonar_mapping" type="static_buffer.py"  name="Static_Buffer"  output="screen"/>-
-
 
     <node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
 
       <param name="resolution" value="1.0" />
 
       <!-- fixed map frame (set to 'map' if SLAM or localization running!) -->
-      <param name="frame_id" type="string" value="world" />
+      <param name="frame_id" type="string" value="map" />
 
       <!-- maximum range to integrate (speedup!) -->
-      <param name="sensor_model/max_range" value="75.0" />
+      <param name="sensor_model/max_range" value="500" />
 
       <!-- data source to integrate (PointCloud2) -->
       <remap from="cloud_in" to="/SLAM/map_PC2" />
 
     </node>
-
-    <node pkg="sonar_mapping" type="reccord_position.py" name="Reccord" output="screen"/>
-    <node pkg="sonar_mapping" type="main.py" name="Static_SLAM" output="screen"/>
+    <node pkg="sonar_mapping" type="map_tf.py"           name="tf_broadcaster_map" output="screen"/>
+    <node pkg="sonar_mapping" type="odom_tf.py"          name="tf_broadcaster"     output="screen"/>
+    <node pkg="sonar_mapping" type="mapping.py"          name="Mapping"            output="screen"/>
+    <node pkg="sonar_mapping" type="static_buffer.py"    name="Static_Buffer"      output="screen"/>
+    <node pkg="sonar_mapping" type="reccord_position.py" name="Reccord"            output="screen"/>
+    <node pkg="sonar_mapping" type="main.py"             name="Static_SLAM"        output="screen"/>
 
 </launch>

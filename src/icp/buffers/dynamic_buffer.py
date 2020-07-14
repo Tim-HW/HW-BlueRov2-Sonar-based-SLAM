@@ -103,7 +103,8 @@ class Buffer():
                 point.z = -5
 
 
-                self.pub_PC.points.append(point)    # add the new point
+                self.pointcloud_buffer.points.append(point)    # add the new point
+                self.pub_PC.publish(self.pointcloud_buffer)
                 self.pub_odom.publish(self.final_odom)
 
 

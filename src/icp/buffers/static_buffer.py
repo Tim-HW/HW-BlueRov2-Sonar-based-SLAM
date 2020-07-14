@@ -32,7 +32,7 @@ class Buffer():
         self.y                        = 0                   # buffer of y position
         self.theta                    = 0                   # buffer of theta/yaw position
 
-        self.sub_PC                   = rospy.Subscriber("/own/simulated/dynamic/sonar_PC", PointCloud, self.callback)          # Subscribe to the dynamic sonar
+        self.sub_PC                   = rospy.Subscriber("/sonar/PC", PointCloud, self.callback)          # Subscribe to the dynamic sonar
         self.pub_PC                   = rospy.Publisher("/SLAM/buffer/pointcloud_target"  , PointCloud, queue_size = 1)         # Publish the final buffer
         self.sub_odom                 = rospy.Subscriber("/odom"                          , Odometry  , self.callback_odom)     # Subscribe to Odometry
         self.pub_odom                 = rospy.Publisher("/SLAM/buffer/odom_target"        , Odometry  , queue_size = 1)         # publish the mean value of the Odometry during the process
@@ -101,8 +101,7 @@ class Buffer():
 
                 if self.sampled == False:
 
-                    #self.remove_duplicates(self.pointcloud_buffer)     # removes duplcated points
-                    #self.sampling(self.pointcloud_buffer)              # sample the number of points
+
                     try:
 
                         self.x       = self.x/len(self.pointcloud_buffer.points)        # compute the mean value of x
@@ -121,6 +120,9 @@ class Buffer():
                         self.final_odom.pose.pose.orientation.z = quat[2]
                         self.final_odom.pose.pose.orientation.w = quat[3]
 
+                        self.remove_duplicates(self.pointcloud_buffer)     # removes duplcated points
+                        self.sampling(self.pointcloud_buffer)              # sample the number of points
+
                         self.pub_PC.publish(self.pointcloud_buffer)          # Publishes the pointcloud_buffer
                         self.pub_odom.publish(self.final_odom)               # Publishes the final Odometry
 
@@ -135,11 +137,12 @@ class Buffer():
 
 
 
-
     def remove_duplicates(self,PointCloud):
 
         ##################################################################################
+        #
         #   Function the remove remove_duplicates from a PointCloud
+        #
         ##################################################################################
 
         threshold = 1.0         # this values means that the threshold value is at 1m
@@ -160,6 +163,9 @@ class Buffer():
 
 
 
+
+
+
     def sampling(self,PointCloud):
 
         i = 0
@@ -167,19 +173,18 @@ class Buffer():
 
         if len(PointCloud.points) % 2 == 1:
 
-            while i < (len(PointCloud.points-3)):
+            while i < (len(PointCloud.points)-1):
 
-                PointCloud.points[i].x = (PointCloud.points[i].x + PointCloud.points[i + 1].x + PointCloud.points[i + 2].x )/3
-                PointCloud.points[i].y = (PointCloud.points[i].y + PointCloud.points[i + 1].y + PointCloud.points[i + 2].y )/3
+                PointCloud.points[i].x = (PointCloud.points[i].x + PointCloud.points[i + 1].x)/2
+                PointCloud.points[i].y = (PointCloud.points[i].y + PointCloud.points[i + 1].y)/2
 
                 list.append(i+1)
-                list.append(i+2)
 
-                i = i + 3
+                i = i + 2
 
         else:
 
-            while i < (len(PointCloud.points)-2):
+            while i < (len(PointCloud.points)):
                 PointCloud.points[i].x = (PointCloud.points[i].x + PointCloud.points[i + 1].x)/2
                 PointCloud.points[i].y = (PointCloud.points[i].y + PointCloud.points[i + 1].y)/2
 
@@ -188,7 +193,7 @@ class Buffer():
                 i = i + 2
 
         list = set(list)
-
+        #print list
         for i in range(0,len(list)):
 
             del PointCloud.points[i]

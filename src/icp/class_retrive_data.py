@@ -18,13 +18,11 @@ class retrive_data():
         self.T_source    = np.zeros((3,1))
         self.T_target    = np.zeros((3,1))
 
-
-
         self.sub_pc_source   = rospy.Subscriber('/SLAM/map'                     , PointCloud, self.callback_source)
         self.sub_pc_target   = rospy.Subscriber('/SLAM/buffer/pointcloud_target', PointCloud, self.callback_target)
 
         self.sub_odom_source = rospy.Subscriber('/SLAM/buffer/odom_source'      , Odometry  , self.callback_odom_source)
-        self.sub_odom_source = rospy.Subscriber('/SLAM/buffer/odom_target'      , Odometry, self.callback_odom_target)
+        self.sub_odom_source = rospy.Subscriber('/SLAM/buffer/odom_target'      , Odometry  , self.callback_odom_target)
 
 
 
@@ -33,15 +31,7 @@ class retrive_data():
         x       = []
         y       = []
         ones    = []
-        T = np.eye(3)
 
-        T[0,2] = self.T_source[0,0]
-        T[1,2] = self.T_source[1,0]
-
-        T[0,0] =  np.cos(-self.T_source[2,0])
-        T[1,1] =  np.cos(-self.T_source[2,0])
-        T[1,0] = -np.sin(-self.T_source[2,0])
-        T[0,1] =  np.sin(-self.T_source[2,0])
 
         for i in range(len(var.points)):
 
@@ -54,17 +44,19 @@ class retrive_data():
 
 
 
+
     def callback_source(self,var):
 
         x       = []
         y       = []
         ones    = []
 
+        """
         T = np.eye(3)
 
         T[0,2] = -self.T_source[0,0]
         T[1,2] = -self.T_source[1,0]
-        """
+
         T[0,0] =  #np.cos(self.T_source[2,0])
         T[1,1] =  #np.cos(self.T_source[2,0])
         T[1,0] = #-np.sin(self.T_source[2,0])
@@ -78,18 +70,8 @@ class retrive_data():
             ones.append(1)
 
         self.source_PC = np.vstack((x,y,ones)).T
-        self.source_PC = np.dot(self.source_PC,T.T)
+        #self.source_PC = np.dot(self.source_PC,T.T)
 
-        T = np.eye(3)
-
-
-
-        T[0,0] =  np.cos(self.T_source[2,0])
-        T[1,1] =  np.cos(self.T_source[2,0])
-        T[1,0] = -np.sin(self.T_source[2,0])
-        T[0,1] =  np.sin(self.T_source[2,0])
-
-        self.source_PC = np.dot(self.source_PC,T.T)
 
 
 
@@ -97,8 +79,6 @@ class retrive_data():
 
 
     def callback_odom_source(self,odom):
-
-
 
         roll  = 0
         pitch = 0
@@ -120,13 +100,9 @@ class retrive_data():
 
     def callback_odom_target(self,odom):
 
-
-
         roll = 0
         pitch = 0
         theta = 0
-
-
 
         self.T_target[0,0] = odom.pose.pose.position.x
         self.T_target[1,0] = odom.pose.pose.position.y
@@ -141,18 +117,18 @@ class retrive_data():
 
 
 
-
-
-
     def initial_guess(self):
 
+
+        #print "t",self.T_target[2,0]
+        #print "s",self.T_source[2,0]
 
         T = np.eye(3)
 
     	delta_x   = self.T_target[0,0] - self.T_source[0,0] # x axis
     	delta_y   = self.T_target[1,0] - self.T_source[1,0] # y axis
     	delta_yaw = self.T_target[2,0] - self.T_source[2,0]   # cos(a)
-
+        #print delta_yaw
 
         T[0,0] =  np.cos(delta_yaw)
         T[1,0] = -np.sin(delta_yaw)
@@ -165,12 +141,39 @@ class retrive_data():
     	return T
 
 
+
+
+
     def return_source(self):
+
+
+        T = np.eye(3)
+
+        T[0,2] = -self.T_source[0,0]
+        T[1,2] = -self.T_source[1,0]
+
+        #self.source_PC = np.dot(self.source_PC,T.T)
 
         return self.source_PC, self.T_source
 
+
+
+
+
+
     def return_target(self):
+
+        T = np.eye(3)
+
+        T[0,2] = 0 #self.T_source[0,0]
+        T[1,2] = 0 #self.T_source[1,0]
+
+        T[0,0] =  np.cos(-self.T_source[2,0])
+        T[1,1] =  np.cos(-self.T_source[2,0])
+        T[1,0] = -np.sin(-self.T_source[2,0])
+        T[0,1] =  np.sin(-self.T_source[2,0])
 
 
         #self.target_PC = np.dot(self.target_PC,T.T)
+
         return self.target_PC, self.T_target

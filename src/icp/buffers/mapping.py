@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
+import tf
 import sys
 import rospy
 import struct
 import numpy as np
 import matplotlib.pyplot as plt
+import roslaunch
 
 from sensor_msgs.msg import PointCloud
 from std_msgs.msg import Header, String,Bool
@@ -15,16 +17,11 @@ from sonar_mapping.msg import my_msg
 
 
 
-
 state       = False
 target_PC   = PointCloud()
 odom_target = np.zeros((3,1))
 
 T = np.zeros((3,3))
-
-
-
-
 
 
 
@@ -72,22 +69,18 @@ class Mapping():
         self.map                      = PointCloud()
         self.map.header.stamp.secs    = int(rospy.get_time())
         self.map.header.stamp.nsecs   = 1000000000*(rospy.get_time()-int(rospy.get_time()))
-        self.map.header.frame_id      = "world"
+        self.map.header.frame_id      = "map"
 
         self.timer                    = rospy.get_time()
         self.final_odom               = Odometry()
         self.sampled                  = False
-        self.x                        = 0
-        self.y                        = 0
-        self.theta                    = 0
 
 
-        self.sub_sonar                = rospy.Subscriber("/own/simulated/dynamic/sonar_PC"  , PointCloud, self.callback)
-        self.sub_odom                 = rospy.Subscriber("/odom"                            , Odometry  , self.callback_odom)
+        self.sub_sonar                = rospy.Subscriber("/sonar/PC"              , PointCloud , self.callback)
+        self.sub_odom                 = rospy.Subscriber("/odom"                  , Odometry   , self.callback_odom)
 
-        self.pub_odom                 = rospy.Publisher("/SLAM/buffer/odom_source"          , Odometry  , queue_size = 1)
-        self.pub_map                  = rospy.Publisher("/SLAM/map"                         , PointCloud, queue_size = 1)
-
+        self.pub_odom                 = rospy.Publisher("/SLAM/buffer/odom_source", Odometry   , queue_size = 1)
+        self.pub_map                  = rospy.Publisher("/SLAM/map"               , PointCloud , queue_size = 1)
 
 
 
@@ -160,9 +153,13 @@ class Mapping():
 
         self.final_odom = var
         self.final_odom.pose.pose.position.x = -250
-        self.final_odom.pose.pose.position.y = 300
+        self.final_odom.pose.pose.position.y =  300
+        self.final_odom.pose.pose.position.z =  -5
 
+        quat = quaternion_from_euler(0, 0, -1.0)       # transform the euler angle into quaternion
 
+        self.final_odom.pose.pose.orientation.z = quat[2]
+        self.final_odom.pose.pose.orientation.w = quat[3]
 
 
 
@@ -185,8 +182,11 @@ class Mapping():
                 orientation_list = [rot_q.x, rot_q.y, rot_q.z, rot_q.w]
                 (roll, pitch, yaw) = euler_from_quaternion(orientation_list)
 
+                """
 
                 point_array = np.array([arg.points[0].x, arg.points[0].y, 1])
+
+                T = np.eye(3)
 
                 T[0,2] = self.final_odom.pose.pose.position.x
                 T[1,2] = self.final_odom.pose.pose.position.y
@@ -202,8 +202,9 @@ class Mapping():
                 point.y = point_array[1]
                 point.z = -5
 
-
-                self.map.points.append(point)    # add the new point
+                """
+                self.map.points.append(arg.points[0])    # add the new point
+                self.pub_map.publish(self.map)
                 self.pub_odom.publish(self.final_odom)
 
 
@@ -213,13 +214,19 @@ class Mapping():
 
                 if self.sampled == False:
 
+
                     self.remove_duplicates(self.map)
-                    #self.sampling(self.pointcloud_buffer)
+                    self.sampling(self.map)
+
+                    del self.map.points[0]
+                    del self.map.points[1]
+                    del self.map.points[2]
 
                     self.pub_map.publish(self.map)
                     self.pub_odom.publish(self.final_odom)
 
                     self.sampled = True
+
 
         try:
             self.pub_map.publish(self.map)
@@ -236,15 +243,14 @@ class Mapping():
     def remove_duplicates(self,PointCloud):
 
         ##################################################################################
-        #
         #   Function the remove remove_duplicates from a PointCloud
-        #
         ##################################################################################
 
         threshold = 1.0         # this values means that the threshold value is at 1m
         list = []
 
         for i in range(0,int(len(PointCloud.points)/2)): # for half of the values
+
             for k in range(int(len(PointCloud.points)/2),len(PointCloud.points)): # for the other half of the other values
 
                 if np.abs(PointCloud.points[i].x - PointCloud.points[k].x) < threshold and np.abs(PointCloud.points[i].y - PointCloud.points[k].y) < threshold: # if the point i is at least than 1m from the point k
@@ -269,15 +275,14 @@ class Mapping():
 
         if len(PointCloud.points) % 2 == 1:
 
-            while i < (len(PointCloud.points)):
+            while i < (len(PointCloud.points)-1):
 
-                PointCloud.points[i].x = (PointCloud.points[i].x + PointCloud.points[i + 1].x + PointCloud.points[i + 2].x )/3
-                PointCloud.points[i].y = (PointCloud.points[i].y + PointCloud.points[i + 1].y + PointCloud.points[i + 2].y )/3
+                PointCloud.points[i].x = (PointCloud.points[i].x + PointCloud.points[i + 1].x)/2
+                PointCloud.points[i].y = (PointCloud.points[i].y + PointCloud.points[i + 1].y)/2
 
                 list.append(i+1)
-                list.append(i+2)
 
-                i = i + 3
+                i = i + 2
 
         else:
 
@@ -290,7 +295,7 @@ class Mapping():
                 i = i + 2
 
         list = set(list)
-
+        #print list
         for i in range(0,len(list)):
 
             del PointCloud.points[i]
@@ -360,7 +365,6 @@ if __name__ == '__main__':
     while not rospy.is_shutdown():
 
 
-
         if state == False:
 
             sub3 = rospy.Subscriber('/SLAM/buffer_1', Bool, callback)
@@ -380,5 +384,7 @@ if __name__ == '__main__':
 
             if initialization == True:
                 map = Mapping()
+                #rospy.sleep(2)
+                #map.octomap()
                 print "\n   ############################### Map Created #######################################\n"
                 initialization = False

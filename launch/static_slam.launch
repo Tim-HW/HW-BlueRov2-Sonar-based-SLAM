@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+
+<launch>
+
+    <node pkg="sonar_mapping" type="static_buffer.py"  name="Static_Buffer"  output="screen"/>
+
+
+</launch>

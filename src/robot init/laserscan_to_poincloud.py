@@ -10,15 +10,17 @@ import math
 class Laser2PC():
 
     def __init__(self):
+
+
         self.laserProj = LaserProjection()
 
         #self.pub = rospy.Publisher("/own/true/sonar_PC2",PointCloud2, queue_size=1)
         #self.pub1 = rospy.Publisher("/own/simulated/sonar_PC2",PointCloud2, queue_size=1)
-        self.pub2 = rospy.Publisher("/own/simulated/dynamic/sonar_PC2",PointCloud2, queue_size=1)
+        self.pub2 = rospy.Publisher("/sonar/PC2",PointCloud2, queue_size=1)
 
         #self.sub = rospy.Subscriber("/desistek_saga/sonar",LaserScan, self.callback)
         #self.sub1 = rospy.Subscriber("/own/simulated/sonar_LS",LaserScan, self.callback1)
-        self.sub2 = rospy.Subscriber("/own/simulated/dynamic/sonar_LS",LaserScan, self.callback2)
+        self.sub2 = rospy.Subscriber("/sonar/LS",LaserScan, self.callback2)
 
     """
 

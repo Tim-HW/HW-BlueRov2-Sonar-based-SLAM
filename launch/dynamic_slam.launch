@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+
+<launch>
+
+
+    <node pkg="sonar_mapping" type="dynamic_buffer.py"  name="Dynamic_Buffer"  output="screen"/>
+
+
+</launch>

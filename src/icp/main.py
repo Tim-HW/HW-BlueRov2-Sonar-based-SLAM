@@ -12,6 +12,7 @@ from tf.transformations import euler_from_quaternion
 from tf.transformations import quaternion_from_euler
 from sonar_mapping.msg import my_msg
 import matplotlib.pyplot as plt
+import roslaunch
 
 from class_icp import Align2D
 from class_KF import KF
@@ -98,7 +99,7 @@ def call_buffer_1():
 
     #Function to erased the previous scan of th buffer 1 and collect a new one
     Timer = rospy.get_time()
-    while rospy.get_time() < Timer + 12 :                         # once empty, wait for the buffer to be filled
+    while rospy.get_time() < Timer + 15 :                         # once empty, wait for the buffer to be filled
                                     # wait for 1 second
         create_buffer_1()                                        # allow the buffer to collect data
         rospy.sleep(1)
@@ -245,11 +246,14 @@ if __name__ == '__main__':
 
             answer = raw_input("\n    Do you want to launch the Static or Dynamic SLAM ? Static : [S] / Dynamic : [D]")
 
-            if answer == 'S':
-
-                print "\n   ################################ SLAM : Static ####################################\n"
-            else:
+            if answer == 'D':
                 print "\n   ################################ SLAM : Dynamic ###################################\n"
+
+
+            else:
+                print "\n   ################################ SLAM : Static ####################################\n"
+
+
 
             print " "
             print "   ###################################################################################"
@@ -279,10 +283,8 @@ if __name__ == '__main__':
 
 
         T = data.initial_guess()   # initial guess of the transform
-        T = np.eye(3)
-        #T = from_world2icp(odom_source,T)
 
-        #print(T)
+
 
         print " "
         print "   ###################################################################################"
@@ -326,7 +328,6 @@ if __name__ == '__main__':
 
 
 
-
         print "\nOutput ICP :\n",observation
 
         # transform the 3x3 matrix into a 3x1 matrix
@@ -336,20 +337,29 @@ if __name__ == '__main__':
                                 [observation[1,2]],                 # y
                                 [np.arccos(observation[0,0])]])     # theta
 
-        offset_update = from_icp2world(odom_source,observation)
+
+
+        offset_update = observation
+
+        observation = odom_source - observation
+
+        odometry    = odom_target # the odometry becomes the last scan done
+
+
+
+
+        #offset_update = from_icp2world(odom_source,offset_update)
 
         msg = my_msg()              # create msg type
         msg.x     = offset_update[0,0]   # offset in x
         msg.y     = offset_update[1,0]   # offset in y
         msg.theta = offset_update[2,0]   # offset in theta
-        pub_T.publish(msg)       # publish the offset
+        pub_T.publish(msg)
 
 
-        observation = from_icp2world(odom_source, observation)  # transform the position from a ICP frame reference to World reference
 
-        odometry    = odom_target # the odometry becomes the last scan done
+        #observation = from_icp2world(odom_source, observation)  # transform the position from a ICP frame reference to World reference
 
-        observation = odom_source + observation
 
 
         print "\n Odometry :\n",odometry          # print the odometry
@@ -373,6 +383,9 @@ if __name__ == '__main__':
         pub_odom.publish(msg)       # publish the offset
 
         delete_buffer_1()
+
         rospy.sleep(1)
+
         create_buffer_1()
+
         initialization = False      # change the case
