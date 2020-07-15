@@ -84,15 +84,14 @@ class Buffer():
                 orientation_list = [rot_q.x, rot_q.y, rot_q.z, rot_q.w]
                 (roll, pitch, theta) = euler_from_quaternion(orientation_list)
 
-
                 self.x      += self.current_odom.pose.pose.position.x         # add the current x position to the mean variable of x
                 self.y      += self.current_odom.pose.pose.position.y         # add the current y position to the mean variable of y
                 self.theta  += theta                                          # add the current theta position to the mean variable of theta
 
+                self.final_odom = self.current_odom
+
                 self.pub_PC.publish(self.pointcloud_buffer)                   # publish the current state of the buffer (useful for debugging)
-
-
-
+                self.pub_odom.publish(self.final_odom)
 
 
             else:   # if timer is over then
@@ -132,8 +131,7 @@ class Buffer():
                     except ZeroDivisionError :
                         pass
 
-
-                             # variable to make sur that this process happen only once
+            self.pub_odom.publish(self.final_odom)
 
 
 

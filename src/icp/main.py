@@ -94,6 +94,10 @@ def callback_gt(odom):
 
 
 
+
+
+
+
 def call_buffer_1():
 
 
@@ -107,6 +111,10 @@ def call_buffer_1():
 
 
     return data.return_source()
+
+
+
+
 
 
 def call_buffer_2():
@@ -137,6 +145,11 @@ def call_buffer_2():
 
 
 
+
+
+
+
+
 def from_icp2world(odom,point):
 
 
@@ -161,6 +174,11 @@ def from_icp2world(odom,point):
     #point = odom + point
 
     return point
+
+
+
+
+
 
 
 
@@ -191,6 +209,9 @@ def from_world2icp(odom,T):
 
 
 
+
+
+
 def callback_target(var):
 
     global pc_target
@@ -204,9 +225,15 @@ def callback_target(var):
 
 
 
+
+
+
+
+
 if __name__ == '__main__':
 
     rospy.init_node('Static_SLAM', anonymous=True) 	# initiate the node
+
     sub_gt       = rospy.Subscriber('/desistek_saga/pose_gt'        , Odometry  , callback_gt) # Subscribes to the Ground Truth pose
     sub_target   = rospy.Subscriber('/SLAM/buffer/pointcloud_target', PointCloud, callback_target) # Subscribes to the Ground Truth pose
 
@@ -247,6 +274,7 @@ if __name__ == '__main__':
             answer = raw_input("\n    Do you want to launch the Static or Dynamic SLAM ? Static : [S] / Dynamic : [D]")
 
             if answer == 'D':
+
                 print "\n   ################################ SLAM : Dynamic ###################################\n"
 
 
@@ -338,10 +366,12 @@ if __name__ == '__main__':
                                 [np.arccos(observation[0,0])]])     # theta
 
 
+        observation = from_icp2world(odom_source,observation)
+
 
         offset_update = observation
 
-        observation = odom_source - observation
+        observation = odom_source + observation
 
         odometry    = odom_target # the odometry becomes the last scan done
 

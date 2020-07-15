@@ -11,6 +11,7 @@ import numpy as np
 
 class retrive_data():
 
+
     def __init__(self):
 
         self.source_PC   = []
@@ -24,6 +25,22 @@ class retrive_data():
         self.sub_odom_source = rospy.Subscriber('/SLAM/buffer/odom_source'      , Odometry  , self.callback_odom_source)
         self.sub_odom_source = rospy.Subscriber('/SLAM/buffer/odom_target'      , Odometry  , self.callback_odom_target)
 
+
+
+    def callback_source(self,var):
+
+        x       = []
+        y       = []
+        ones    = []
+
+
+        for i in range(len(var.points)):
+
+            x.append(var.points[i].x)
+            y.append(var.points[i].y)
+            ones.append(1)
+
+        self.source_PC = np.vstack((x,y,ones)).T
 
 
     def callback_target(self,var):
@@ -45,34 +62,6 @@ class retrive_data():
 
 
 
-    def callback_source(self,var):
-
-        x       = []
-        y       = []
-        ones    = []
-
-        """
-        T = np.eye(3)
-
-        T[0,2] = -self.T_source[0,0]
-        T[1,2] = -self.T_source[1,0]
-
-        T[0,0] =  #np.cos(self.T_source[2,0])
-        T[1,1] =  #np.cos(self.T_source[2,0])
-        T[1,0] = #-np.sin(self.T_source[2,0])
-        T[0,1] = # np.sin(self.T_source[2,0])
-        """
-
-        for i in range(len(var.points)):
-
-            x.append(var.points[i].x)
-            y.append(var.points[i].y)
-            ones.append(1)
-
-        self.source_PC = np.vstack((x,y,ones)).T
-        #self.source_PC = np.dot(self.source_PC,T.T)
-
-
 
 
 
@@ -92,10 +81,6 @@ class retrive_data():
         roll, pitch, theta = euler_from_quaternion([rot_q.x, rot_q.y, rot_q.z, rot_q.w])
 
         self.T_source[2,0] = theta
-
-
-
-
 
 
     def callback_odom_target(self,odom):
@@ -124,7 +109,7 @@ class retrive_data():
         #print "s",self.T_source[2,0]
 
         T = np.eye(3)
-
+        """
     	delta_x   = self.T_target[0,0] - self.T_source[0,0] # x axis
     	delta_y   = self.T_target[1,0] - self.T_source[1,0] # y axis
     	delta_yaw = self.T_target[2,0] - self.T_source[2,0]   # cos(a)
@@ -137,7 +122,7 @@ class retrive_data():
 
         T[0,2] = 0#x
         T[1,2] = 0#y
-
+        """
     	return T
 
 
@@ -146,13 +131,16 @@ class retrive_data():
 
     def return_source(self):
 
-
+        """
         T = np.eye(3)
 
-        T[0,2] = -self.T_source[0,0]
-        T[1,2] = -self.T_source[1,0]
+        T[0,0] =  np.cos(-self.T_source[2,0])
+        T[1,1] =  np.cos(-self.T_source[2,0])
+        T[1,0] = -np.sin(-self.T_source[2,0])
+        T[0,1] =  np.sin(-self.T_source[2,0])
 
-        #self.source_PC = np.dot(self.source_PC,T.T)
+        self.source_PC = np.dot(self.source_PC,T.T)
+        """
 
         return self.source_PC, self.T_source
 
@@ -165,15 +153,17 @@ class retrive_data():
 
         T = np.eye(3)
 
-        T[0,2] = 0 #self.T_source[0,0]
-        T[1,2] = 0 #self.T_source[1,0]
+        """
+        T[0,2] = self.T_source[0,0] # x axis
+        T[1,2] = self.T_source[1,0] # y axis
+        """
 
-        T[0,0] =  np.cos(-self.T_source[2,0])
-        T[1,1] =  np.cos(-self.T_source[2,0])
-        T[1,0] = -np.sin(-self.T_source[2,0])
-        T[0,1] =  np.sin(-self.T_source[2,0])
+        T[0,0] =  np.cos(self.T_source[2,0] - self.T_target[2,0])
+        T[1,1] =  np.cos(self.T_source[2,0] - self.T_target[2,0])
+        T[1,0] = -np.sin(self.T_source[2,0] - self.T_target[2,0])
+        T[0,1] =  np.sin(self.T_source[2,0] - self.T_target[2,0])
 
 
-        #self.target_PC = np.dot(self.target_PC,T.T)
+        self.target_PC = np.dot(self.target_PC,T.T)
 
         return self.target_PC, self.T_target
