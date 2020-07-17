@@ -28,9 +28,9 @@ class Buffer():
         self.current_odom             = Odometry()          # temporary buffer for odom
         self.final_odom               = Odometry()          # final buffer for odom
         self.sampled                  = False               # variable to treat data once gathered one time only
-        self.x                        = 0                   # buffer of x position
-        self.y                        = 0                   # buffer of y position
-        self.theta                    = 0                   # buffer of theta/yaw position
+        self.x                        = []                   # buffer of x position
+        self.y                        = []                   # buffer of y position
+        self.theta                    = []                   # buffer of theta/yaw position
 
         self.sub_PC                   = rospy.Subscriber("/sonar/PC", PointCloud, self.callback)          # Subscribe to the dynamic sonar
         self.pub_PC                   = rospy.Publisher("/SLAM/buffer/pointcloud_target"  , PointCloud, queue_size = 1)         # Publish the final buffer
@@ -53,9 +53,9 @@ class Buffer():
         self.current_odom             = Odometry()
         self.final_odom               = Odometry()
         self.sampled                  = False
-        self.x                        = 0
-        self.y                        = 0
-        self.theta                    = 0
+        self.x                        = []
+        self.y                        = []
+        self.theta                    = []
 
     def callback_odom(self,var):
 
@@ -84,9 +84,9 @@ class Buffer():
                 orientation_list = [rot_q.x, rot_q.y, rot_q.z, rot_q.w]
                 (roll, pitch, theta) = euler_from_quaternion(orientation_list)
 
-                self.x      += self.current_odom.pose.pose.position.x         # add the current x position to the mean variable of x
-                self.y      += self.current_odom.pose.pose.position.y         # add the current y position to the mean variable of y
-                self.theta  += theta                                          # add the current theta position to the mean variable of theta
+                self.x.append(self.current_odom.pose.pose.position.x)        # add the current x position to the mean variable of x
+                self.y.append(self.current_odom.pose.pose.position.y)         # add the current y position to the mean variable of y
+                self.theta.append(theta)                                          # add the current theta position to the mean variable of theta
 
                 self.final_odom = self.current_odom
 
@@ -103,9 +103,12 @@ class Buffer():
 
                     try:
 
-                        self.x       = self.x/len(self.pointcloud_buffer.points)        # compute the mean value of x
-                        self.y       = self.y/len(self.pointcloud_buffer.points)        # compute the mean value of y
-                        self.theta   = self.theta/len(self.pointcloud_buffer.points)    # compute the mean value of theta
+                        self.x       = np.sum(self.x)       /   len(self.x)        # compute the mean value of x
+                        self.y       = np.sum(self.y)       /   len(self.y)        # compute the mean value of y
+                        self.theta   = np.sum(self.theta)   /   len(self.theta)    # compute the mean value of theta
+
+
+                        print self.x,self.y,self.theta
 
                         self.final_odom = self.current_odom                  # the final odom takes the header of the current odom
 

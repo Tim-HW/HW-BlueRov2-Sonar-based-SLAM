@@ -364,7 +364,7 @@ if __name__ == '__main__':
         offset_update = odom_source - odom_target # initial guess
         offset_update = -observation             # initial_guess + ICP output
 
-        print "offset map", offset_update
+        #print "offset map", offset_update
 
         msg = my_msg()              # create msg type
         msg.x     = offset_update[0,0]   # offset in x
@@ -391,16 +391,17 @@ if __name__ == '__main__':
         kf.prediction(odometry)                         # prediction step
         new_pose = kf.correction(observation)           # correction step
 
-        print"\n new position :\n", new_pose            # print the new pose
+        print"\n Kalman Filter :\n", new_pose            # print the new pose
         print"\n GROUND TRUTH position :\n", odom_gt    # print the Ground Truth pose
+        RMS_pre_KF = np.sqrt(np.abs(odom_gt[0,0]-odometry[0,0])**2 + np.abs(odom_gt[1,0]-odometry[1,0])**2 + np.abs(odom_gt[2,0]-odometry[2,0])**2)
+        RMS_post_KF = np.sqrt(np.abs(odom_gt[0,0]-new_pose[0,0)**2 + np.abs(odom_gt[1,0]-new_pose[1,0])**2 + np.abs(odom_gt[2,0]-new_pose[2,0])**2)
 
-        RMS = np.sqrt(np.abs(odom_gt[0,0]-new_pose[0,0])**2 + np.abs(odom_gt[1,0]-new_pose[1,0])**2 + np.abs(odom_gt[2,0]-new_pose[2,0])**2)
-
-        print"\n RMS : ",RMS,"\n"
+        print"\n RMS before SLAM : ",RMS_pre_KF,"\n"
+        print"\n RMS after SLAM  : ",RMS_post_KF,"\n"
 
         new_pose = new_pose - odometry # we compute the offset between the new pose and the odometry
 
-        #print"\n offset :\n", new_pose  # print the offset
+        print"\n offset :\n", new_pose  # print the offset
 
         msg = my_msg()              # create msg type
         msg.x     = new_pose[0,0]   # offset in x
