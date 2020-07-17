@@ -171,7 +171,6 @@ def from_icp2world(odom,point):
 
     point[0,0] = -1*point[0,0]
 
-    #point = odom + point
 
     return point
 
@@ -186,8 +185,8 @@ def from_world2icp(odom,T):
 
     point = np.zeros((3,1))
 
-    point[0,0] = T[0,2]
-    point[1,0] = T[1,2]
+    point[0,0] = T[0,0]
+    point[1,0] = T[1,0]
     point[2,0] =   1
 
 
@@ -197,14 +196,10 @@ def from_world2icp(odom,T):
 
     point = np.dot(tmp,point)
 
-    point[2,0] = np.arccos(T[0,0])
+    point[2,0] = np.arccos(tmp[0,0])
 
-    point[0,0] = -1*point[0,0]
 
-    T[0,2] = point[0,0]
-    T[1,2] = point[1,0]
-
-    return T
+    return point
 
 
 
@@ -366,19 +361,10 @@ if __name__ == '__main__':
                                 [np.arccos(observation[0,0])]])     # theta
 
 
-        observation = from_icp2world(odom_source,observation)
+        offset_update = odom_source - odom_target # initial guess
+        offset_update = -observation             # initial_guess + ICP output
 
-
-        offset_update = observation
-
-        observation = odom_source + observation
-
-        odometry    = odom_target # the odometry becomes the last scan done
-
-
-
-
-        #offset_update = from_icp2world(odom_source,offset_update)
+        print "offset map", offset_update
 
         msg = my_msg()              # create msg type
         msg.x     = offset_update[0,0]   # offset in x
@@ -388,7 +374,14 @@ if __name__ == '__main__':
 
 
 
-        #observation = from_icp2world(odom_source, observation)  # transform the position from a ICP frame reference to World reference
+        observation = from_icp2world(odom_source,observation)
+
+        observation = odom_source + observation
+
+        odometry    = odom_target # the odometry becomes the last scan done
+
+
+
 
 
 
@@ -401,10 +394,13 @@ if __name__ == '__main__':
         print"\n new position :\n", new_pose            # print the new pose
         print"\n GROUND TRUTH position :\n", odom_gt    # print the Ground Truth pose
 
+        RMS = np.sqrt(np.abs(odom_gt[0,0]-new_pose[0,0])**2 + np.abs(odom_gt[1,0]-new_pose[1,0])**2 + np.abs(odom_gt[2,0]-new_pose[2,0])**2)
+
+        print"\n RMS : ",RMS,"\n"
 
         new_pose = new_pose - odometry # we compute the offset between the new pose and the odometry
 
-        print"\n offset :\n", new_pose  # print the offset
+        #print"\n offset :\n", new_pose  # print the offset
 
         msg = my_msg()              # create msg type
         msg.x     = new_pose[0,0]   # offset in x

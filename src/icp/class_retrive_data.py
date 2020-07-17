@@ -109,20 +109,36 @@ class retrive_data():
         #print "s",self.T_source[2,0]
 
         T = np.eye(3)
-        """
-    	delta_x   = self.T_target[0,0] - self.T_source[0,0] # x axis
-    	delta_y   = self.T_target[1,0] - self.T_source[1,0] # y axis
-    	delta_yaw = self.T_target[2,0] - self.T_source[2,0]   # cos(a)
-        #print delta_yaw
 
-        T[0,0] =  np.cos(delta_yaw)
-        T[1,0] = -np.sin(delta_yaw)
-        T[0,1] =  np.sin(delta_yaw)
-        T[1,1] =  np.cos(delta_yaw)
+        delta = np.zeros((3,1))
 
-        T[0,2] = 0#x
-        T[1,2] = 0#y
         """
+
+        T[0,0] =  np.cos(-self.T_source[2,0])
+        T[1,0] = -np.sin(-self.T_source[2,0])
+        T[0,1] =  np.sin(-self.T_source[2,0])
+        T[1,1] =  np.cos(-self.T_source[2,0])
+
+        T[0,2] = -self.T_source[0,0]
+        T[1,2] = -self.T_source[1,0]
+
+        """
+    	delta[0,0]   = self.T_target[0,0] - self.T_source[0,0]
+    	delta[1,0]   = self.T_target[1,0] - self.T_source[1,0]
+    	delta[2,0]   = self.T_target[2,0] - self.T_source[2,0]
+
+
+        delta = np.dot(T,delta)
+
+
+        T[0,0] =  np.cos(delta[2,0])
+        T[1,0] = -np.sin(delta[2,0])
+        T[0,1] =  np.sin(delta[2,0])
+        T[1,1] =  np.cos(delta[2,0])
+
+        T[0,2] = delta[0,0]
+        T[1,2] = delta[1,0]
+
     	return T
 
 
@@ -151,19 +167,19 @@ class retrive_data():
 
     def return_target(self):
 
-        T = np.eye(3)
 
         """
-        T[0,2] = self.T_source[0,0] # x axis
-        T[1,2] = self.T_source[1,0] # y axis
-        """
+        T = np.eye(3)
+
+
+        T[0,2] = self.T_source[0,0] - self.T_target[0,0] # x axis
+        T[1,2] = self.T_source[1,0] - self.T_target[1,0] # y axis
 
         T[0,0] =  np.cos(self.T_source[2,0] - self.T_target[2,0])
         T[1,1] =  np.cos(self.T_source[2,0] - self.T_target[2,0])
         T[1,0] = -np.sin(self.T_source[2,0] - self.T_target[2,0])
         T[0,1] =  np.sin(self.T_source[2,0] - self.T_target[2,0])
-
-
-        self.target_PC = np.dot(self.target_PC,T.T)
+        """
+        #self.target_PC = np.dot(self.target_PC,T.T)
 
         return self.target_PC, self.T_target

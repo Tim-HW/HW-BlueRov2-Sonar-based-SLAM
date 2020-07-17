@@ -21,7 +21,7 @@ state       = False
 target_PC   = PointCloud()
 odom_target = np.zeros((3,1))
 
-T = np.zeros((3,3))
+T = np.zeros((3,1))
 
 
 
@@ -38,18 +38,18 @@ def from_odom2world(point,odom):
     T[0,2] = odom[0,0]
     T[1,2] = odom[1,0]
 
-    T[0,0] =  np.cos(-odom[2,0])
-    T[1,1] =  np.cos(-odom[2,0])
-    T[1,0] = -np.sin(-odom[2,0])
-    T[0,1] =  np.sin(-odom[2,0])
+    T[0,0] =  np.cos(odom[2,0])
+    T[1,1] =  np.cos(odom[2,0])
+    T[1,0] = -np.sin(odom[2,0])
+    T[0,1] =  np.sin(odom[2,0])
 
 
 
-    point_array = np.dot(T,point_array.T)
+    point_array = np.dot(point_array,T.T)
 
     point.x = point_array[0]
     point.y = point_array[1]
-    point.z = -5
+    point.z = 0
 
     return point
 
@@ -125,21 +125,26 @@ class Mapping():
         x = self.final_odom.pose.pose.position.x
         y = self.final_odom.pose.pose.position.y
 
-        odom = np.array([[x + T[0,2]],
-                         [y + T[1,2]],
-                            [yaw]])
+        odom = np.array([[  x  ],
+                         [  y  ],
+                         [ yaw ]])
 
+        rotation = np.array([[0],
+                             [0],
+                             [T[2,0]]])
 
+        translation = np.array([[T[0,0]],
+                                [T[1,0]],
+                                [0]])
 
         for i in range(len(pointcloud.points)):
 
-            #print(len(self.pointcloud_buffer1.points))
+
             tmp_point = pointcloud.points[i]
 
 
-            tmp_point = from_odom2world(tmp_point,odom)
-            #print(tmp_point)
-            #print " "
+            tmp_point = from_odom2world(tmp_point, rotation)
+            tmp_point = from_odom2world(tmp_point, translation)
 
             self.map.points.append(tmp_point)
 
@@ -216,7 +221,7 @@ class Mapping():
 
 
                     self.remove_duplicates(self.map)
-                    self.sampling(self.map)
+                    #self.sampling(self.map)
 
                     del self.map.points[0]
                     del self.map.points[1]
@@ -287,6 +292,7 @@ class Mapping():
         else:
 
             while i < (len(PointCloud.points)):
+
                 PointCloud.points[i].x = (PointCloud.points[i].x + PointCloud.points[i + 1].x)/2
                 PointCloud.points[i].y = (PointCloud.points[i].y + PointCloud.points[i + 1].y)/2
 
@@ -318,17 +324,11 @@ class Mapping():
 
 def callback_T(msg):
 
+    global T
 
-
-    T[0,0] = np.cos(msg.theta)
-    T[1,0] = -np.sin(msg.theta)
-    T[0,1] = np.sin(msg.theta)
-    T[1,1] = np.cos(msg.theta)
-
-    T[0,2] = msg.x
-    T[1,2] = msg.y
-
-    T[2,2] = 1
+    T[0,0] = msg.x
+    T[1,0] = msg.y
+    T[2,0] = msg.theta
 
 
 
