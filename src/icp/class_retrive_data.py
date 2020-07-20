@@ -23,7 +23,7 @@ class retrive_data():
         self.sub_pc_target   = rospy.Subscriber('/SLAM/buffer/pointcloud_target', PointCloud, self.callback_target)
 
         self.sub_odom_source = rospy.Subscriber('/SLAM/buffer/odom_source'      , Odometry  , self.callback_odom_source)
-        self.sub_odom_source = rospy.Subscriber('/SLAM/buffer/odom_target'      , Odometry  , self.callback_odom_target)
+        self.sub_odom_target = rospy.Subscriber('/SLAM/buffer/odom_target'      , Odometry  , self.callback_odom_target)
 
 
 
@@ -112,23 +112,13 @@ class retrive_data():
 
         delta = np.zeros((3,1))
 
-        """
-
-        T[0,0] =  np.cos(-self.T_source[2,0])
-        T[1,0] = -np.sin(-self.T_source[2,0])
-        T[0,1] =  np.sin(-self.T_source[2,0])
-        T[1,1] =  np.cos(-self.T_source[2,0])
-
-        T[0,2] = -self.T_source[0,0]
-        T[1,2] = -self.T_source[1,0]
-
-        """
-    	delta[0,0]   = self.T_target[0,0] - self.T_source[0,0]
-    	delta[1,0]   = self.T_target[1,0] - self.T_source[1,0]
-    	delta[2,0]   = self.T_target[2,0] - self.T_source[2,0]
 
 
-        delta = np.dot(T,delta)
+    	delta[0,0]   = self.T_source[0,0] - self.T_target[0,0]
+    	delta[1,0]   = self.T_source[1,0] - self.T_target[1,0]
+    	delta[2,0]   = self.T_source[2,0] - self.T_target[2,0]
+
+
 
 
         T[0,0] =  np.cos(delta[2,0])
@@ -136,8 +126,9 @@ class retrive_data():
         T[0,1] =  np.sin(delta[2,0])
         T[1,1] =  np.cos(delta[2,0])
 
-        T[0,2] = delta[0,0]
-        T[1,2] = delta[1,0]
+        T[0,2] = 0#delta[0,0]
+        T[1,2] = 0#delta[1,0]
+
 
     	return T
 
@@ -172,14 +163,17 @@ class retrive_data():
         T = np.eye(3)
 
 
-        T[0,2] = self.T_source[0,0] - self.T_target[0,0] # x axis
-        T[1,2] = self.T_source[1,0] - self.T_target[1,0] # y axis
+        T[0,2] = -5
+        T[1,2] = -5
 
-        T[0,0] =  np.cos(self.T_source[2,0] - self.T_target[2,0])
-        T[1,1] =  np.cos(self.T_source[2,0] - self.T_target[2,0])
-        T[1,0] = -np.sin(self.T_source[2,0] - self.T_target[2,0])
-        T[0,1] =  np.sin(self.T_source[2,0] - self.T_target[2,0])
+        theta = 20
+        theta = theta*np.pi/180
+
+        T[0,0] =  np.cos(theta)
+        T[1,1] =  np.cos(theta)
+        T[1,0] = -np.sin(theta)
+        T[0,1] =  np.sin(theta)
+
+        self.target_PC = np.dot(self.target_PC,T.T)
         """
-        #self.target_PC = np.dot(self.target_PC,T.T)
-
         return self.target_PC, self.T_target

@@ -22,7 +22,7 @@ class Buffer():
         self.pointcloud_buffer                      = PointCloud()
         self.pointcloud_buffer.header.stamp.secs    = int(rospy.get_time())
         self.pointcloud_buffer.header.stamp.nsecs   = 1000000000*(rospy.get_time()-int(rospy.get_time()))
-        self.pointcloud_buffer.header.frame_id      = "desistek_saga/base_link"
+        self.pointcloud_buffer.header.frame_id      = "map"
 
         self.Timer                    = rospy.get_time()    # initialize timerer
         self.current_odom             = Odometry()          # temporary buffer for odom
@@ -47,7 +47,7 @@ class Buffer():
         self.pointcloud_buffer                      = PointCloud()
         self.pointcloud_buffer.header.stamp.secs    = int(rospy.get_time())
         self.pointcloud_buffer.header.stamp.nsecs   = 1000000000*(rospy.get_time()-int(rospy.get_time()))
-        self.pointcloud_buffer.header.frame_id      = "desistek_saga/base_link"
+        self.pointcloud_buffer.header.frame_id      = "map"
 
         self.Timer                    = rospy.get_time()
         self.current_odom             = Odometry()
@@ -108,7 +108,7 @@ class Buffer():
                         self.theta   = np.sum(self.theta)   /   len(self.theta)    # compute the mean value of theta
 
 
-                        print self.x,self.y,self.theta
+
 
                         self.final_odom = self.current_odom                  # the final odom takes the header of the current odom
 
@@ -125,6 +125,18 @@ class Buffer():
                         self.remove_duplicates(self.pointcloud_buffer)     # removes duplcated points
                         self.sampling(self.pointcloud_buffer)              # sample the number of points
 
+                        """
+                        pt = Point32()
+                        pt.x = 1
+                        pt.y = 0
+
+                        self.pointcloud_buffer.points.append(pt)
+
+                        pt.x = 0
+                        pt.y = 1
+
+                        self.pointcloud_buffer.points.append(pt)
+                        """
                         self.pub_PC.publish(self.pointcloud_buffer)          # Publishes the pointcloud_buffer
                         self.pub_odom.publish(self.final_odom)               # Publishes the final Odometry
 
@@ -133,8 +145,9 @@ class Buffer():
 
                     except ZeroDivisionError :
                         pass
+                self.pub_PC.publish(self.pointcloud_buffer)          # Publishes the pointcloud_buffer
+                self.pub_odom.publish(self.final_odom)               # Publishes the final Odometry
 
-            self.pub_odom.publish(self.final_odom)
 
 
 

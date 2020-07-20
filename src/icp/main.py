@@ -77,14 +77,14 @@ def callback_gt(odom):
     pitch = 0
     theta = 0
 
-    odom_gt[0] = odom.pose.pose.position.x
-    odom_gt[1] = odom.pose.pose.position.y
+    odom_gt[0,0] = odom.pose.pose.position.x
+    odom_gt[1,0] = odom.pose.pose.position.y
 
 
     rot_q                = odom.pose.pose.orientation
     roll, pitch, theta   = euler_from_quaternion([rot_q.x, rot_q.y, rot_q.z, rot_q.w])
 
-    odom_gt[2] = theta
+    odom_gt[2,0] = theta
 
 
 
@@ -153,11 +153,11 @@ def call_buffer_2():
 def from_icp2world(odom,point):
 
 
+    fact = 1
 
-
-    tmp = np.array([[np.cos(odom[2,0])  , np.sin(odom[2,0]) , 0],
-                    [-np.sin(odom[2,0]) , np.cos(odom[2,0]) , 0],
-                    [        0          ,             0     , 1],])
+    tmp = np.array([[np.cos((fact*np.pi)-odom[2,0])  , np.sin((fact*np.pi)-odom[2,0]) ,     -odom[0,0]     ],
+                    [-np.sin((fact*np.pi)-odom[2,0]) , np.cos((fact*np.pi)-odom[2,0]) ,     -odom[1,0]     ],
+                    [        0          ,             0       ,     1     ],])
 
     det_theta = point[2,0]
 
@@ -169,8 +169,7 @@ def from_icp2world(odom,point):
 
     point[2,0] = det_theta
 
-    point[0,0] = -1*point[0,0]
-
+    point = -1 * point
 
     return point
 
@@ -190,9 +189,9 @@ def from_world2icp(odom,T):
     point[2,0] =   1
 
 
-    tmp = np.array([[ np.cos(-odom[2,0]) , np.sin(-odom[2,0]) , 0],
-                    [-np.sin(-odom[2,0]) , np.cos(-odom[2,0]) , 0],
-                    [        0           ,          0         , 1],])
+    tmp = np.array([[ np.cos(-odom[2,0]) , np.sin(-odom[2,0]) ,  0 ],
+                    [-np.sin(-odom[2,0]) , np.cos(-odom[2,0]) ,  0 ],
+                    [        0           ,          0         ,  1 ],])
 
     point = np.dot(tmp,point)
 
@@ -244,69 +243,45 @@ if __name__ == '__main__':
 
     rospy.sleep(4)
 
+
+    print " "
+    print "   ###################################################################################"
+    print "   #                             BLUEROV2 - ICP-SLAM                                 #"
+    print "   ###################################################################################"
+    print "   # Author : Timothee Freville                                                      #"
+    print "   # Supervisor : Yvan Petillot                                                      #"
+    print "   # Departement : Engineering & Physical Departement                                #"
+    print "   # University : Heriot Watt - Edinburgh                                            #"
+    print "   # Github : https://github.com/Tim-HW/Tim-HW-BlueRov2_Sonar_based_SLAM-            #"
+    print "   ###################################################################################"
+    print "   # The project was created for a Msc Robotics final thesis.                        #"
+    print "   # The idea was to implemente a robust sonar-base SLAM method for underwater ROV.  #"
+    print "   # To achived this we used the an ICP method coupled with a Kalman Filter for the  #"
+    print "   # Localization and octomap server for the Mapping method.                         #"
+    print "   ###################################################################################"
+    print " "
+
+
+    print " "
+    print "   ###################################################################################"
+    print "   #                           Mapping initialization                                #"
+    print "   ###################################################################################"
+    print " "
+
+    #raw_input("\n            Would you like to initialize the map here ? [ENTER]")
+
+    source,odom_source = call_buffer_1() # ask the buffer 1 to scan
+
+
     while not rospy.is_shutdown():
 
 
-        if initialization == True:
+        print " "
+        print "   ###################################################################################"
+        print "   #                                   SCAN                                          #"
+        print "   ###################################################################################"
 
-            print " "
-            print "   ###################################################################################"
-            print "   #                             BLUEROV2 - ICP-SLAM                                 #"
-            print "   ###################################################################################"
-            print "   # Author : Timothee Freville                                                      #"
-            print "   # Supervisor : Yvan Petillot                                                      #"
-            print "   # Departement : Engineering & Physical Departement                                #"
-            print "   # University : Heriot Watt - Edinburgh                                            #"
-            print "   # Github : https://github.com/Tim-HW/Tim-HW-BlueRov2_Sonar_based_SLAM-            #"
-            print "   ###################################################################################"
-            print "   # The project was created for a Msc Robotics final thesis.                        #"
-            print "   # The idea was to implemente a robust sonar-base SLAM method for underwater ROV.  #"
-            print "   # To achived this we used the an ICP method coupled with a Kalman Filter for the  #"
-            print "   # Localization and octomap server for the Mapping method.                         #"
-            print "   ###################################################################################"
-            print " "
-
-            answer = raw_input("\n    Do you want to launch the Static or Dynamic SLAM ? Static : [S] / Dynamic : [D]")
-
-            if answer == 'D':
-
-                print "\n   ################################ SLAM : Dynamic ###################################\n"
-
-
-            else:
-                print "\n   ################################ SLAM : Static ####################################\n"
-
-
-
-            print " "
-            print "   ###################################################################################"
-            print "   #                           Mapping initialization                                #"
-            print "   ###################################################################################"
-            print " "
-
-            raw_input("\n            Would you like to initialize the map here ? [ENTER]")
-
-            source,odom_source = call_buffer_1() # ask the buffer 1 to scan
-
-            print " "
-            print "   ###################################################################################"
-            print "   #                                   SCAN                                          #"
-            print "   ###################################################################################"
-
-            target,odom_target = call_buffer_2() # ask the buffer 2 to scan
-
-        if initialization == False:
-
-            print " "
-            print "   ###################################################################################"
-            print "   #                                   SCAN                                          #"
-            print "   ###################################################################################"
-
-            target,odom_target = call_buffer_2() # empty the scan 2 and re-ask for scan
-
-
-        T = data.initial_guess()   # initial guess of the transform
-
+        target,odom_target = call_buffer_2() # empty the scan 2 and re-ask for scan
 
 
         print " "
@@ -318,12 +293,14 @@ if __name__ == '__main__':
         print "\n   # Number of points in the buffer :",len(target)
         print " "
 
-        ICP = Align2D(source,target,T)               # create an ICP object
 
-        observation,error = ICP.transform                  # get the position according to the ICP
+        T = data.initial_guess()   # initial guess of the transform
+        ICP = Align2D(target,source,T)               # create an ICP object
+
+        output_ICP,error = ICP.transform                  # get the position according to the ICP
 
 
-        while error > 0.1:  # if the error is too high
+        while error > 1:  # if the error is too high
 
             print " "
             print "   ###################################################################################"
@@ -347,18 +324,23 @@ if __name__ == '__main__':
 
                 ICP = Align2D(source,target,T)       # create an ICP object
 
-                observation,error = ICP.transform    # get the position according to the ICP
+                output_ICP,error = ICP.transform    # get the position according to the ICP
 
 
 
-        print "\nOutput ICP :\n",observation
+        print "\nOutput ICP :\n", output_ICP
 
         # transform the 3x3 matrix into a 3x1 matrix
 
 
-        observation = np.array([[observation[0,2]],                 # x
-                                [observation[1,2]],                 # y
-                                [np.arccos(observation[0,0])]])     # theta
+
+
+        observation = np.array([[output_ICP[0,2]],
+                                [output_ICP[1,2]],
+                                [np.arccos(output_ICP[0,0])]])     # theta
+
+
+        print "\nobservation before frame changed :\n",observation,"\n"
 
 
         offset_update = odom_source - odom_target # initial guess
@@ -376,7 +358,10 @@ if __name__ == '__main__':
 
         observation = from_icp2world(odom_source,observation)
 
-        observation = odom_source + observation
+
+        print "\nobservation after frame changed :\n",observation,"\n"
+
+
 
         odometry    = odom_target # the odometry becomes the last scan done
 
@@ -393,11 +378,11 @@ if __name__ == '__main__':
 
         print"\n Kalman Filter :\n", new_pose            # print the new pose
         print"\n GROUND TRUTH position :\n", odom_gt    # print the Ground Truth pose
-        RMS_pre_KF = np.sqrt(np.abs(odom_gt[0,0]-odometry[0,0])**2 + np.abs(odom_gt[1,0]-odometry[1,0])**2 + np.abs(odom_gt[2,0]-odometry[2,0])**2)
-        RMS_post_KF = np.sqrt(np.abs(odom_gt[0,0]-new_pose[0,0)**2 + np.abs(odom_gt[1,0]-new_pose[1,0])**2 + np.abs(odom_gt[2,0]-new_pose[2,0])**2)
+        #RMS_pre_KF = np.sqrt(np.abs(odom_gt[0,0] - odometry[0,0])**2 + np.abs(odom_gt[1,0] - odometry[1,0])**2 + np.abs(odom_gt[2,0] - odometry[2,0])**2))
+        #RMS_post_KF = np.sqrt(np.abs(odom_gt[0,0] - new_pose[0,0)**2 + np.abs(odom_gt[1,0] - new_pose[1,0])**2 + np.abs(odom_gt[2,0] - new_pose[2,0])**2))
 
-        print"\n RMS before SLAM : ",RMS_pre_KF,"\n"
-        print"\n RMS after SLAM  : ",RMS_post_KF,"\n"
+        #print"\n RMS before SLAM : ",RMS_pre_KF,"\n"
+        #print"\n RMS after SLAM  : ",RMS_post_KF,"\n"
 
         new_pose = new_pose - odometry # we compute the offset between the new pose and the odometry
 
@@ -411,8 +396,8 @@ if __name__ == '__main__':
 
         delete_buffer_1()
 
+        del ICP
+
         rospy.sleep(1)
 
         create_buffer_1()
-
-        initialization = False      # change the case

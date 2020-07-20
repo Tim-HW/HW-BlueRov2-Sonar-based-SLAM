@@ -21,6 +21,7 @@ if __name__ == '__main__':
 
     rospy.init_node('ICP_test', anonymous=True) 	# initiate the node
 
+
     data = retrive_data() # create the class to retrive the data from the scans
 
 
@@ -33,3 +34,4 @@ if __name__ == '__main__':
 
     ICP = Align2D(source,target,T)               # create an ICP object
     new_pose,error = ICP.transform
+    print new_pose

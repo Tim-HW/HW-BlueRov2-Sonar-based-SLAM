@@ -208,6 +208,7 @@ class Mapping():
                 point.z = -5
 
                 """
+
                 self.map.points.append(arg.points[0])    # add the new point
                 self.pub_map.publish(self.map)
                 self.pub_odom.publish(self.final_odom)
@@ -227,17 +228,27 @@ class Mapping():
                     del self.map.points[1]
                     del self.map.points[2]
 
+                    """
+                    pt = Point32()
+                    pt.x = 1
+                    pt.y = 0
+                    pt.z = 0
+
+                    self.map.points.append(pt)
+
+                    pt.x = 0
+                    pt.y = 1
+
+                    self.map.points.append(pt)
+                    """
+
                     self.pub_map.publish(self.map)
                     self.pub_odom.publish(self.final_odom)
 
                     self.sampled = True
 
-
-        try:
-            self.pub_map.publish(self.map)
-            self.pub_odom.publish(self.final_odom)
-        except AttributeError:
-            pass
+                self.pub_map.publish(self.map)
+                self.pub_odom.publish(self.final_odom)
 
 
 
@@ -373,7 +384,7 @@ if __name__ == '__main__':
 
                 if update == False:
 
-                    map.change_origin(target_PC,T)
+                    #map.change_origin(target_PC,T)
                     print "\n   ############################### Map Updated #######################################\n"
                     update = True
 

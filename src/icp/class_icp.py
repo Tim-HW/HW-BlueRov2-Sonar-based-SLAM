@@ -90,15 +90,14 @@ class Align2D:
 
 		print'\n   # number of iteration:', num_iter
 
+
+
 		plt.subplot(223)
 
 		plt.plot(tf_source[:,0],tf_source[:,1], 'or')
 		plt.plot(self.target[:,0],self.target[:,1], 'ob')
 		plt.title("after ICP")
 		plt.show()
-
-		print "   # error of ICP: ",new_err
-
 
 		return T,new_err
 
