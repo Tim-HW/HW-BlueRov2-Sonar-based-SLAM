@@ -159,7 +159,7 @@ def from_icp2world(odom,point):
                     [-np.sin((fact*np.pi)-odom[2,0]) , np.cos((fact*np.pi)-odom[2,0]) ,     -odom[1,0]     ],
                     [        0          ,             0       ,     1     ],])
 
-    det_theta = point[2,0]
+    det_theta = (0.5*np.pi - odom[2,0]) + point[2,0]
 
     point[2,0] = 1
 
@@ -273,7 +273,19 @@ if __name__ == '__main__':
     source,odom_source = call_buffer_1() # ask the buffer 1 to scan
 
 
+
+
+
+
+
+
     while not rospy.is_shutdown():
+
+
+
+
+
+
 
 
         print " "
@@ -295,12 +307,13 @@ if __name__ == '__main__':
 
 
         T = data.initial_guess()   # initial guess of the transform
+
         ICP = Align2D(target,source,T)               # create an ICP object
 
         output_ICP,error = ICP.transform                  # get the position according to the ICP
 
 
-        while error > 1:  # if the error is too high
+        while error > 1.0:  # if the error is too high
 
             print " "
             print "   ###################################################################################"
@@ -328,7 +341,7 @@ if __name__ == '__main__':
 
 
 
-        print "\nOutput ICP :\n", output_ICP
+        #print "\nOutput ICP :\n", output_ICP
 
         # transform the 3x3 matrix into a 3x1 matrix
 
@@ -342,8 +355,6 @@ if __name__ == '__main__':
 
         print "\nobservation before frame changed :\n",observation,"\n"
 
-
-        offset_update = odom_source - odom_target # initial guess
         offset_update = -observation             # initial_guess + ICP output
 
         #print "offset map", offset_update
@@ -359,7 +370,7 @@ if __name__ == '__main__':
         observation = from_icp2world(odom_source,observation)
 
 
-        print "\nobservation after frame changed :\n",observation,"\n"
+        #print "\nobservation after frame changed :\n",observation,"\n"
 
 
 

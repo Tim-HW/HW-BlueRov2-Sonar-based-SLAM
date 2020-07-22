@@ -102,10 +102,10 @@ class Buffer():
 
 
                     try:
-
-                        self.x       = np.sum(self.x)       /   len(self.x)        # compute the mean value of x
-                        self.y       = np.sum(self.y)       /   len(self.y)        # compute the mean value of y
-                        self.theta   = np.sum(self.theta)   /   len(self.theta)    # compute the mean value of theta
+                        """
+                        self.x       = np.sum(self.x)       /   (len(self.x))        # compute the mean value of x
+                        self.y       = np.sum(self.y)       /   (len(self.y))        # compute the mean value of y
+                        self.theta   = np.sum(self.theta)   /   (len(self.theta))    # compute the mean value of theta
 
 
 
@@ -121,7 +121,7 @@ class Buffer():
 
                         self.final_odom.pose.pose.orientation.z = quat[2]
                         self.final_odom.pose.pose.orientation.w = quat[3]
-
+                        """
                         self.remove_duplicates(self.pointcloud_buffer)     # removes duplcated points
                         self.sampling(self.pointcloud_buffer)              # sample the number of points
 

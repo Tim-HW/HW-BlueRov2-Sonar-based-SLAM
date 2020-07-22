@@ -117,34 +117,21 @@ class Mapping():
 
         tmp = Point32()
 
-        rot_q  = self.final_odom.pose.pose.orientation
-
-        orientation_list = [rot_q.x, rot_q.y, rot_q.z, rot_q.w]
-        (roll, pitch, yaw) = euler_from_quaternion(orientation_list)
-
-        x = self.final_odom.pose.pose.position.x
-        y = self.final_odom.pose.pose.position.y
-
-        odom = np.array([[  x  ],
-                         [  y  ],
-                         [ yaw ]])
-
-        rotation = np.array([[0],
-                             [0],
+        rotation = np.array([[  0   ],
+                             [  0   ],
                              [T[2,0]]])
 
-        translation = np.array([[T[0,0]],
-                                [T[1,0]],
-                                [0]])
+        translation = np.array([[ T[0,0] ],
+                                [ T[1,0] ],
+                                [   0    ]])
 
         for i in range(len(pointcloud.points)):
 
 
             tmp_point = pointcloud.points[i]
 
-
+            #tmp_point = from_odom2world(tmp_point, translation)
             tmp_point = from_odom2world(tmp_point, rotation)
-            tmp_point = from_odom2world(tmp_point, translation)
 
             self.map.points.append(tmp_point)
 
@@ -345,6 +332,7 @@ def callback_T(msg):
 
 
 def callback_pc(msg):
+
     global target_PC
 
     target_PC = msg
@@ -384,7 +372,7 @@ if __name__ == '__main__':
 
                 if update == False:
 
-                    #map.change_origin(target_PC,T)
+                    map.change_origin(target_PC,T)
                     print "\n   ############################### Map Updated #######################################\n"
                     update = True
 
@@ -395,7 +383,5 @@ if __name__ == '__main__':
 
             if initialization == True:
                 map = Mapping()
-                #rospy.sleep(2)
-                #map.octomap()
                 print "\n   ############################### Map Created #######################################\n"
                 initialization = False

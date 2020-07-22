@@ -52,16 +52,16 @@ def callback_odom(odom):
 
 
 
-def write_CSVfile(time,x,y,x_gt,y_gt,error_x,error_y):
+def write_CSVfile(time,x,y,yaw,x_gt,y_gt,yaw_gt,error_x,error_y,error_yaw,RMS):
 
 	my_path = os.path.abspath(os.path.dirname(__file__))
-	path = os.path.join(my_path, "reccord.csv")
+	path = os.path.join(my_path, "reccord_localization.csv")
 	with open(path, mode="w") as csv_file:
-		fieldname=['time','x','y','x_gt','y_gt','error_x','error_y']
+		fieldname=['time','x','y','yaw','x_gt','y_gt','yaw_gt','error_x','error_y','error_yaw','RMS']
 		csv_writer = csv.DictWriter(csv_file, fieldnames=fieldname)
 		csv_writer.writeheader()
 		for i in range(len(x)):
-			csv_writer.writerow({'time':time[i],'x':x[i],'y':y[i],'x_gt':x_gt[i],'y_gt':y_gt[i],'error_x':error_x[i],'error_y':error_y[i]})
+			csv_writer.writerow({'time':time[i],'x':x[i],'y':y[i],'yaw':yaw[i],'x_gt':x_gt[i],'y_gt':y_gt[i],'yaw_gt':yaw_gt[i],'error_x':error_x[i],'error_y':error_y[i],'error_yaw':error_yaw[i],'RMS':RMS[i]})
 
 
 
@@ -69,54 +69,49 @@ def write_CSVfile(time,x,y,x_gt,y_gt,error_x,error_y):
 if __name__ == '__main__':
 
 
-    x    = []
-    y    = []
-    x_gt = []
-    y_gt = []
+    x     = []
+    y     = []
+    yaw   = []
 
-    error = []
-    error_x = []
-    error_y = []
-    time = []
+    x_gt   = []
+    y_gt   = []
+    yaw_gt = []
+
+    RMS       = []
+    error_x   = []
+    error_y   = []
+    error_yaw = []
+
+    time      = []
 
 
     rospy.init_node('Reccord', anonymous=True) 	# initiate the node
-    sub_gt       = rospy.Subscriber('/desistek_saga/pose_gt', Odometry, callback_gt)                   # Subscribes to the Ground Truth pose
-    sub_odom     = rospy.Subscriber('/odom', Odometry, callback_odom)
+    rospy.Subscriber('/desistek_saga/pose_gt', Odometry, callback_gt)                   # Subscribes to the Ground Truth pose
+    rospy.Subscriber('/odom', Odometry, callback_odom)
 
     rate = rospy.Rate(2) # 2Hz
     i = 0
+
     while not rospy.is_shutdown():
 
         try:
+
             x.append(odom_robot[0,0])
             y.append(odom_robot[1,0])
+            yaw.append(odom_robot[2,0])
             x_gt.append(odom_gt[0,0])
             y_gt.append(odom_gt[1,0])
+            yaw_gt.append(odom_gt[2,0])
             error_x.append(np.abs(odom_robot[0,0] - odom_gt[0,0]))
             error_y.append(np.abs(odom_robot[1,0] - odom_gt[1,0]))
-            error.append(math.sqrt(np.abs(odom_robot[0,0] - odom_gt[0,0])**2 + np.abs(odom_robot[0,0] - odom_gt[0,0])**2))
+            error_yaw.append(np.abs(odom_robot[2,0] - odom_gt[2,0]))
+            RMS.append(math.sqrt(np.abs(odom_robot[0,0] - odom_gt[0,0])**2 + np.abs(odom_robot[0,0] - odom_gt[0,0])**2 + np.abs(odom_robot[2,0] - odom_gt[2,0])**2))
             time.append(i*0.5)
             i += 1
             rate.sleep()
 
         except rospy.ROSInterruptException:
 
-            write_CSVfile(time,x,y,x_gt,y_gt,error_x,error_y)
+            write_CSVfile(time,x,y,yaw,x_gt,y_gt,yaw_gt,error_x,error_y,error_yaw,RMS)
 
-            """
-            plt.figure()
-            plt.subplot(221)
-            plt.plot(time,error,"r")				   #print the cov in y
-            plt.title('RMS')
-
-
-
-            plt.subplot(222)
-            plt.plot(time,error_x,"b")				   #print the cov in y
-            plt.plot(time,error_y,"r")				   #print the cov in y
-            plt.title('x and y errors')
-
-            plt.show() #show
-            """
             pass

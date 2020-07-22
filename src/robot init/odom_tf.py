@@ -22,7 +22,7 @@ def handle_odom_pose(msg):
 	z = msg.pose.pose.position.z
 
 	br = tf.TransformBroadcaster()
-	br.sendTransform((x, y, -2.5), tf.transformations.quaternion_from_euler(0, 0, yaw), rospy.Time.now(),'odom',"world")
+	br.sendTransform((x, y, -5), tf.transformations.quaternion_from_euler(0, 0, yaw), rospy.Time.now(),'odom',"world")
 
 
 

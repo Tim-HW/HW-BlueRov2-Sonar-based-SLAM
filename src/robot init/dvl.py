@@ -84,9 +84,10 @@ class dvl:
 		if msg.x == self.offset.x and msg.y == self.offset.y and msg.theta == self.offset.theta:
 			pass
 		else:
-			self.offset.x += msg.x
-			self.offset.y += msg.y
-			self.offset.theta += msg.theta
+			self.offset.x = msg.x
+			self.offset.y = msg.y
+			self.offset.theta = msg.theta
+
 
 
 	# The frequency of the DVL is lower than the IMU
@@ -150,7 +151,6 @@ class dvl:
 
 		odm.pose.pose.position.x = self.offset.x + self.estimated_traj_x
 		odm.pose.pose.position.y = self.offset.y + self.estimated_traj_y
-
 
 		odm.pose.pose.position.z = self.estimated_traj_z
 
