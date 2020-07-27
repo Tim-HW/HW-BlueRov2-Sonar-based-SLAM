@@ -163,7 +163,7 @@ def from_icp2world(odom,point):
 
 
 
-    tmp = np.array([[np.cos((fact*np.pi)+odom[2,0])  ,   np.sin((fact+np.pi)+odom[2,0])  ,        0      ],
+    tmp = np.array([[np.cos((fact*np.pi)+odom[2,0])  ,  np.sin((fact+np.pi)+odom[2,0])  ,        0      ],
                     [-np.sin((fact*np.pi)+odom[2,0]) ,  np.cos((fact+np.pi)+odom[2,0])   ,        0      ],
                     [              0                 ,                   0               ,        1      ]])
 

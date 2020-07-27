@@ -9,6 +9,31 @@ import numpy as np
 
 
 
+
+def from_world2icp(odom,T):
+
+    point = np.zeros((3,1))
+
+    point[0,0] = T[0,0]
+    point[1,0] = T[1,0]
+    point[2,0] =   1
+
+
+    tmp = np.array([[ np.cos(-odom[2,0]) , np.sin(-odom[2,0]) , -odom[0,0] ],
+                    [-np.sin(-odom[2,0]) , np.cos(-odom[2,0]) , -odom[0,0] ],
+                    [        0           ,          0         ,      1      ]])
+
+    point = np.dot(tmp,point)
+
+
+    return point
+
+
+
+
+
+
+
 class retrive_data():
 
 
@@ -116,15 +141,12 @@ class retrive_data():
 
         T = np.eye(3)
 
-        delta = np.zeros((3,1))
+        delta = np.ones((3,1))
 
 
 
-    	delta_x   = self.T_source[0,0] - self.T_target[0,0]
-    	delta_y   = self.T_source[1,0] - self.T_target[1,0]
-
-
-
+    	delta[0,0] = self.T_source[0,0] - self.T_target[0,0]
+    	delta[0,0] = self.T_source[1,0] - self.T_target[1,0]
 
         """
         T[0,0] =  np.cos(delta[2,0])
@@ -132,8 +154,11 @@ class retrive_data():
         T[0,1] =  np.sin(delta[2,0])
         T[1,1] =  np.cos(delta[2,0])
         """
-        T[0,2] = delta_x
-        T[1,2] = delta_y
+
+        from_world2icp(self.T_source,delta)
+
+        T[0,2] = delta[0,0]
+        T[1,2] = delta[1,0]
 
 
     	return T

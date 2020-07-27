@@ -129,9 +129,10 @@ class Mapping():
 
 
             tmp_point = pointcloud.points[i]
-
-            tmp_point = from_odom2world(tmp_point, translation)
+            
             tmp_point = from_odom2world(tmp_point, rotation)
+            tmp_point = from_odom2world(tmp_point, translation)
+
 
             self.map.points.append(tmp_point)
 
@@ -372,7 +373,7 @@ if __name__ == '__main__':
 
                 if update == False:
 
-                    #map.change_origin(target_PC,T)
+                    map.change_origin(target_PC,T)
                     print "\n   ############################### Map Updated #######################################\n"
                     update = True
 

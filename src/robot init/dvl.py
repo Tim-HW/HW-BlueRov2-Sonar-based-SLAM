@@ -150,8 +150,8 @@ class dvl:
 		odm.header.frame_id = "world"
 		#odm.child_frame_id = "desistek_saga/base_link"
 
-		odm.pose.pose.position.x = self.offset.x + self.estimated_traj_x - rospy.get_time()/16
-		odm.pose.pose.position.y = self.offset.y + self.estimated_traj_y - rospy.get_time()/16
+		odm.pose.pose.position.x = self.offset.x + self.estimated_traj_x #- rospy.get_time()/16
+		odm.pose.pose.position.y = self.offset.y + self.estimated_traj_y #- rospy.get_time()/16
 		odm.pose.pose.position.z = self.estimated_traj_z
 
 		odm.pose.pose.orientation.x = self.quaternionX
