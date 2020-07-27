@@ -130,11 +130,13 @@ class Mapping():
 
             tmp_point = pointcloud.points[i]
 
-            #tmp_point = from_odom2world(tmp_point, translation)
+            tmp_point = from_odom2world(tmp_point, translation)
             tmp_point = from_odom2world(tmp_point, rotation)
 
             self.map.points.append(tmp_point)
 
+
+        self.remove_duplicates(self.map)
 
 
 
@@ -197,7 +199,7 @@ class Mapping():
                 """
 
                 self.map.points.append(arg.points[0])    # add the new point
-                self.pub_map.publish(self.map)
+                #self.pub_map.publish(self.map)
                 self.pub_odom.publish(self.final_odom)
 
 
@@ -211,9 +213,7 @@ class Mapping():
                     self.remove_duplicates(self.map)
                     #self.sampling(self.map)
 
-                    del self.map.points[0]
-                    del self.map.points[1]
-                    del self.map.points[2]
+
 
                     """
                     pt = Point32()
@@ -234,8 +234,8 @@ class Mapping():
 
                     self.sampled = True
 
-                self.pub_map.publish(self.map)
-                self.pub_odom.publish(self.final_odom)
+            self.pub_map.publish(self.map)
+            self.pub_odom.publish(self.final_odom)
 
 
 
@@ -372,7 +372,7 @@ if __name__ == '__main__':
 
                 if update == False:
 
-                    map.change_origin(target_PC,T)
+                    #map.change_origin(target_PC,T)
                     print "\n   ############################### Map Updated #######################################\n"
                     update = True
 

@@ -29,34 +29,40 @@ class retrive_data():
 
     def callback_source(self,var):
 
-        x       = []
-        y       = []
-        ones    = []
+
+        if len(self.source_PC) != len(var.points):
+            x       = []
+            y       = []
+            ones    = []
 
 
-        for i in range(len(var.points)):
+            for i in range(len(var.points)):
 
-            x.append(var.points[i].x)
-            y.append(var.points[i].y)
-            ones.append(1)
+                x.append(var.points[i].x)
+                y.append(var.points[i].y)
+                ones.append(1)
 
-        self.source_PC = np.vstack((x,y,ones)).T
+            self.source_PC = np.vstack((x,y,ones)).T
+
+
 
 
     def callback_target(self,var):
 
-        x       = []
-        y       = []
-        ones    = []
+
+        if len(self.target_PC) != len(var.points):
+            x       = []
+            y       = []
+            ones    = []
 
 
-        for i in range(len(var.points)):
+            for i in range(len(var.points)):
 
-            x.append(var.points[i].x)
-            y.append(var.points[i].y)
-            ones.append(1)
+                x.append(var.points[i].x)
+                y.append(var.points[i].y)
+                ones.append(1)
 
-        self.target_PC = np.vstack((x,y,ones)).T
+            self.target_PC = np.vstack((x,y,ones)).T
 
 
 
@@ -114,20 +120,20 @@ class retrive_data():
 
 
 
-    	delta[0,0]   = self.T_source[0,0] - self.T_target[0,0]
-    	delta[1,0]   = self.T_source[1,0] - self.T_target[1,0]
-    	delta[2,0]   = self.T_source[2,0] - self.T_target[2,0]
+    	delta_x   = self.T_source[0,0] - self.T_target[0,0]
+    	delta_y   = self.T_source[1,0] - self.T_target[1,0]
 
 
 
 
+        """
         T[0,0] =  np.cos(delta[2,0])
         T[1,0] = -np.sin(delta[2,0])
         T[0,1] =  np.sin(delta[2,0])
         T[1,1] =  np.cos(delta[2,0])
-
-        T[0,2] = 0#delta[0,0]
-        T[1,2] = 0#delta[1,0]
+        """
+        T[0,2] = delta_x
+        T[1,2] = delta_y
 
 
     	return T
@@ -166,7 +172,7 @@ class retrive_data():
         T[0,2] = -5
         T[1,2] = -5
 
-        theta = 20
+        theta = 0
         theta = theta*np.pi/180
 
         T[0,0] =  np.cos(theta)
@@ -176,4 +182,22 @@ class retrive_data():
 
         self.target_PC = np.dot(self.target_PC,T.T)
         """
+
+        T = np.eye(3)
+
+        delta = np.zeros((3,1))
+
+    	delta[2,0]   = self.T_target[2,0] - self.T_source[2,0]
+
+
+
+
+        T[0,0] =  np.cos(delta[2,0])
+        T[1,0] =  np.sin(delta[2,0])
+        T[0,1] =  -np.sin(delta[2,0])
+        T[1,1] =  np.cos(delta[2,0])
+
+
+        self.target_PC = np.dot(self.target_PC,T.T)
+
         return self.target_PC, self.T_target

@@ -28,9 +28,16 @@ if __name__ == '__main__':
 
     rospy.sleep(5)
 
+
+
+
     T                   = data.initial_guess()   # initial guess of the transform
     source,odom_source  = data.return_source()   # PointCloud of the source scan
     target,odom_target  = data.return_target()   # PointCloud of the target scan
+
+    print len(source)
+    print len(target)
+
 
     ICP = Align2D(source,target,T)               # create an ICP object
     new_pose,error = ICP.transform

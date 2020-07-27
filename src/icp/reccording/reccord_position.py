@@ -105,7 +105,7 @@ if __name__ == '__main__':
             error_x.append(np.abs(odom_robot[0,0] - odom_gt[0,0]))
             error_y.append(np.abs(odom_robot[1,0] - odom_gt[1,0]))
             error_yaw.append(np.abs(odom_robot[2,0] - odom_gt[2,0]))
-            RMS.append(math.sqrt(np.abs(odom_robot[0,0] - odom_gt[0,0])**2 + np.abs(odom_robot[0,0] - odom_gt[0,0])**2 + np.abs(odom_robot[2,0] - odom_gt[2,0])**2))
+            RMS.append(math.sqrt(np.abs(odom_robot[0,0] - odom_gt[0,0])**2 + np.abs(odom_robot[1,0] - odom_gt[1,0])**2 + np.abs(odom_robot[2,0] - odom_gt[2,0])**2))
             time.append(i*0.5)
             i += 1
             rate.sleep()

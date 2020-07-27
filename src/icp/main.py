@@ -153,23 +153,29 @@ def call_buffer_2():
 def from_icp2world(odom,point):
 
 
-    fact = 1
+    fact = 0
 
-    tmp = np.array([[np.cos((fact*np.pi)-odom[2,0])  , np.sin((fact*np.pi)-odom[2,0]) ,     -odom[0,0]     ],
-                    [-np.sin((fact*np.pi)-odom[2,0]) , np.cos((fact*np.pi)-odom[2,0]) ,     -odom[1,0]     ],
-                    [        0          ,             0       ,     1     ],])
-
-    det_theta = (0.5*np.pi - odom[2,0]) + point[2,0]
+    det_theta = point[2,0] + odom[2,0]
 
     point[2,0] = 1
 
 
 
+
+
+    tmp = np.array([[np.cos((fact*np.pi)+odom[2,0])  ,   np.sin((fact+np.pi)+odom[2,0])  ,        0      ],
+                    [-np.sin((fact*np.pi)+odom[2,0]) ,  np.cos((fact+np.pi)+odom[2,0])   ,        0      ],
+                    [              0                 ,                   0               ,        1      ]])
+
     point = np.dot(tmp,point)
 
-    point[2,0] = det_theta
+    point[1,0] = -1*point[1,0]
 
-    point = -1 * point
+    point[0,0] += odom[0,0]
+    point[1,0] += odom[1,0]
+
+
+    point[2,0] = det_theta
 
     return point
 
@@ -226,6 +232,7 @@ def callback_target(var):
 
 if __name__ == '__main__':
 
+
     rospy.init_node('Static_SLAM', anonymous=True) 	# initiate the node
 
     sub_gt       = rospy.Subscriber('/desistek_saga/pose_gt'        , Odometry  , callback_gt) # Subscribes to the Ground Truth pose
@@ -268,7 +275,7 @@ if __name__ == '__main__':
     print "   ###################################################################################"
     print " "
 
-    #raw_input("\n            Would you like to initialize the map here ? [ENTER]")
+    raw_input("\n            Would you like to initialize the map here ? [ENTER]")
 
     source,odom_source = call_buffer_1() # ask the buffer 1 to scan
 
@@ -293,6 +300,9 @@ if __name__ == '__main__':
         print "   #                                   SCAN                                          #"
         print "   ###################################################################################"
 
+
+        source,odom_source = data.return_source()
+
         target,odom_target = call_buffer_2() # empty the scan 2 and re-ask for scan
 
 
@@ -310,10 +320,14 @@ if __name__ == '__main__':
 
         ICP = Align2D(target,source,T)               # create an ICP object
 
+
+
+
         output_ICP,error = ICP.transform                  # get the position according to the ICP
 
 
-        while error > 1.0:  # if the error is too high
+
+        while error > 0.5:  # if the error is too high
 
             print " "
             print "   ###################################################################################"
@@ -335,13 +349,15 @@ if __name__ == '__main__':
 
                 T = data.initial_guess()             # initial guess of the transform
 
-                ICP = Align2D(source,target,T)       # create an ICP object
+                ICP = Align2D(target,source,T)               # create an ICP object
+
 
                 output_ICP,error = ICP.transform    # get the position according to the ICP
 
 
 
-        #print "\nOutput ICP :\n", output_ICP
+
+        print "\nOutput ICP :\n", output_ICP,"\n"
 
         # transform the 3x3 matrix into a 3x1 matrix
 
@@ -350,19 +366,23 @@ if __name__ == '__main__':
 
         observation = np.array([[output_ICP[0,2]],
                                 [output_ICP[1,2]],
-                                [np.arccos(output_ICP[0,0])]])     # theta
+                                [(odom_target[2,0] - odom_source[2,0]) + np.arctan(output_ICP[1,0]/output_ICP[0,0]) ]])     # theta
+
+
+
 
 
         print "\nobservation before frame changed :\n",observation,"\n"
 
-        offset_update = -observation             # initial_guess + ICP output
+
+        offset_update = observation             # initial_guess + ICP output
 
         #print "offset map", offset_update
 
         msg = my_msg()              # create msg type
         msg.x     = offset_update[0,0]   # offset in x
         msg.y     = offset_update[1,0]   # offset in y
-        msg.theta = offset_update[2,0]   # offset in theta
+        msg.theta = -offset_update[2,0]   # offset in theta
         pub_T.publish(msg)
 
 
@@ -389,8 +409,6 @@ if __name__ == '__main__':
 
         print"\n Kalman Filter :\n", new_pose            # print the new pose
         print"\n GROUND TRUTH position :\n", odom_gt    # print the Ground Truth pose
-        #RMS_pre_KF = np.sqrt(np.abs(odom_gt[0,0] - odometry[0,0])**2 + np.abs(odom_gt[1,0] - odometry[1,0])**2 + np.abs(odom_gt[2,0] - odometry[2,0])**2))
-        #RMS_post_KF = np.sqrt(np.abs(odom_gt[0,0] - new_pose[0,0)**2 + np.abs(odom_gt[1,0] - new_pose[1,0])**2 + np.abs(odom_gt[2,0] - new_pose[2,0])**2))
 
         #print"\n RMS before SLAM : ",RMS_pre_KF,"\n"
         #print"\n RMS after SLAM  : ",RMS_post_KF,"\n"

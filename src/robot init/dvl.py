@@ -84,9 +84,9 @@ class dvl:
 		if msg.x == self.offset.x and msg.y == self.offset.y and msg.theta == self.offset.theta:
 			pass
 		else:
-			self.offset.x = msg.x
-			self.offset.y = msg.y
-			self.offset.theta = msg.theta
+			self.offset.x += msg.x
+			self.offset.y += msg.y
+			self.offset.theta += msg.theta
 
 
 
@@ -140,6 +140,7 @@ class dvl:
 		self.convert_to_odom()
 
 	def convert_to_odom(self):
+
 		odm = Odometry()
 		odm.header.seq = self.dvlseq
 		rostime = rospy.get_time()
@@ -149,9 +150,8 @@ class dvl:
 		odm.header.frame_id = "world"
 		#odm.child_frame_id = "desistek_saga/base_link"
 
-		odm.pose.pose.position.x = self.offset.x + self.estimated_traj_x
-		odm.pose.pose.position.y = self.offset.y + self.estimated_traj_y
-
+		odm.pose.pose.position.x = self.offset.x + self.estimated_traj_x - rospy.get_time()/16
+		odm.pose.pose.position.y = self.offset.y + self.estimated_traj_y - rospy.get_time()/16
 		odm.pose.pose.position.z = self.estimated_traj_z
 
 		odm.pose.pose.orientation.x = self.quaternionX

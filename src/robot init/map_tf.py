@@ -50,8 +50,8 @@ def handle_map_pose(var):
 
 
 		br = tf.TransformBroadcaster()
-		br.sendTransform((x, y, z),
-	                        tf.transformations.quaternion_from_euler(0, 0, yaw),
+		br.sendTransform((-250, 300, -5),
+	                        tf.transformations.quaternion_from_euler(0, 0, -1),
 	                        rospy.Time.now(),
 	                        'map',
 	                        "world")
