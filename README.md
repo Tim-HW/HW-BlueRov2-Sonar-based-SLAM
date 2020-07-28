@@ -82,7 +82,7 @@ then add the following command:
 
 ## Mechanical Sonar
 
-you will need to change some URDF code from the ROV to allow a 360° vision.
+ * you will need to change some URDF code from the ROV to allow a 360° vision.
 for this run the following commands:
 
 ```
@@ -91,7 +91,7 @@ $ cd ..
 $ cd uuv_sensor_plugins/uuv_sensor_ros_plugins/urdf
 $ sudo gedit sonar_snippets.xacro
 ```
-and the following sonar description :
+ * and the following sonar description :
 ```xml
   <xacro:macro name="micron_sonar" params="namespace parent_link *origin">
       <xacro:multibeam_sonar
@@ -117,11 +117,11 @@ and the following sonar description :
       </xacro:multibeam_sonar>
     </xacro:macro>
 ```
-Then we will need to change the sonar called in the URDF of the desitek sage :
+ * Then we will need to change the sonar called in the URDF of the desitek sage :
 
-go here : desistek_saga/desistek_saga_description/urdfcand
-open : desistek_saga_sensors.xacro
-remove the orignial forward sonar and repace it by :
+ * go here : desistek_saga/desistek_saga_description/urdfcand
+ * open : desistek_saga_sensors.xacro
+ * remove the orignial forward sonar and repace it by :
 ```xml
   <!-- MSIS sonar sensor -->
   <xacro:micron_sonar namespace="${namespace}" parent_link="${namespace}/base_link">
