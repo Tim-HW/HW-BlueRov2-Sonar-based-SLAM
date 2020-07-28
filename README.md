@@ -91,7 +91,7 @@ $ cd ..
 $ cd uuv_sensor_plugins/uuv_sensor_ros_plugins/urdf
 $ sudo gedit sonar_snippets.xacro
 ```
-and and the following sonar description :
+and the following sonar description :
 ```xml
   <xacro:macro name="micron_sonar" params="namespace parent_link *origin">
       <xacro:multibeam_sonar
@@ -116,25 +116,20 @@ and and the following sonar description :
         </visual>
       </xacro:multibeam_sonar>
     </xacro:macro>
+```
+Then we will need to change the sonar called in the URDF of the desitek sage :
 
-
+go here : desistek_saga/desistek_saga_description/urdfcand
+open : desistek_saga_sensors.xacro
+remove the orignial forward sonar and repace it by :
+```xml
+  <!-- MSIS sonar sensor -->
+  <xacro:micron_sonar namespace="${namespace}" parent_link="${namespace}/base_link">
+    <origin xyz="0.0 0 -0.1" rpy="0 0 0"/>
+  </xacro:micron_sonar>
 ```
 ![sonar2](https://github.com/Bluerov2/MASTER/blob/sonar_mapping/images/9e9dd76fd4f547150d948ba49b7f92b3_74108.jpeg)
 
-## Octomap launching
-
-before launching anything you will have to do some modification:
-We call ocotmap server 50 seconds after the beginning of the simulation. we are doing this because for some reason
-the first 360 value of the sonar are drifted. Therefore, we launch a python file that will wait for 50 seconds before launching octomap.launch. but to achived this we will have to change the path of the file:
-
-```unix
-$ roscd sonar_mapping
-$ cd src
-$ sudo gedit octomap_launch.py
-```
-change the path:
-
->"/home/tim/bluerov_ws/src/sonar_mapping/launch/octomap.launch"
 
 ## Launch
 
