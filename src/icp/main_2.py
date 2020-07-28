@@ -66,6 +66,27 @@ def callback_gt(msg):
 
 
 
+def from_world2icp(odom,T):
+
+    point = np.zeros((3,1))
+
+    point[0,0] = T[0,0]-odom[0,0]
+    point[1,0] = T[1,0]-odom[1,0]
+    point[2,0] =   1
+
+
+
+    tmp = np.array([[ np.cos(odom[2,0]) , np.sin(odom[2,0]) ,  0 ],
+                    [-np.sin(odom[2,0]) , np.cos(odom[2,0]) ,  0 ],
+                    [        0           ,          0         ,  1 ],])
+
+    point = np.dot(tmp,point)
+
+
+    return point
+
+
+
 
 
 
@@ -77,29 +98,10 @@ if __name__ == '__main__':
     rospy.init_node('Static_SLAM', anonymous=True) 	# initiate the node
 
     rospy.Subscriber('/desistek_saga/pose_gt'        , Odometry  , callback_gt) # Subscribes to the Ground Truth pose
-    rospy.Subscriber('/SLAM/buffer/odom_source'        , Odometry  , callback_odom) # Subscribes to the Ground Truth pose
+    rospy.Subscriber('/SLAM/buffer/odom_source'      , Odometry  , callback_odom) # Subscribes to the Ground Truth pose
 
     while not rospy.is_shutdown():
-        """
-        T = np.eye(3)
 
-        th = odom[2,0]
+        new = from_world2icp(odom,odom_gt)
 
-        odom_gt[2,0] = 1
-
-        T[0,0] =  np.cos(th)
-        T[1,0] = -np.sin(th)
-        T[0,1] =  np.sin(th)
-        T[1,1] =  np.cos(th)
-
-        T[0,2] = -odom[0,0]
-        T[1,2] = -odom[1,0]
-
-
-
-
-
-
-        new_pose = np.dot(T,odom_gt)
-        """
-        print "\n",odom_gt,"\n"
+        print "\n",new,"\n"

@@ -10,9 +10,33 @@ import matplotlib.pyplot as plt
 from sensor_msgs.msg import PointCloud
 from std_msgs.msg import Header, String,Bool
 from nav_msgs.msg import Odometry
+from geometry_msgs.msg import Point32
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
 state = False
+
+
+
+
+def from_world2icp(odom,T):
+
+    point = np.zeros((3,1))
+
+    point[0,0] = T[0,0]-odom[0,0]
+    point[1,0] = T[1,0]-odom[1,0]
+    point[2,0] =   1
+
+
+
+    tmp = np.array([[ np.cos(odom[2,0]) , np.sin(odom[2,0]) ,  0 ],
+                    [-np.sin(odom[2,0]) , np.cos(odom[2,0]) ,  0 ],
+                    [        0           ,          0       ,  1 ],])
+
+    point = np.dot(tmp,point)
+
+
+    return point
+
 
 
 class Buffer():
@@ -22,7 +46,7 @@ class Buffer():
         self.pointcloud_buffer                      = PointCloud()
         self.pointcloud_buffer.header.stamp.secs    = int(rospy.get_time())
         self.pointcloud_buffer.header.stamp.nsecs   = 1000000000*(rospy.get_time()-int(rospy.get_time()))
-        self.pointcloud_buffer.header.frame_id      = "desistek_saga/base_link"
+        self.pointcloud_buffer.header.frame_id      = "map"
 
         self.Timer                    = rospy.get_time()    # initialize timerer
         self.current_odom             = Odometry()          # temporary buffer for odom
@@ -32,7 +56,7 @@ class Buffer():
         self.y                        = 0                   # buffer of y position
         self.theta                    = 0                   # buffer of theta/yaw position
 
-        self.sub_PC                   = rospy.Subscriber("/own/simulated/dynamic/sonar_PC", PointCloud, self.callback)          # Subscribe to the dynamic sonar
+        self.sub_PC                   = rospy.Subscriber("/sonar/PC", PointCloud, self.callback)          # Subscribe to the dynamic sonar
         self.pub_PC                   = rospy.Publisher("/SLAM/buffer/pointcloud_target"  , PointCloud, queue_size = 1)         # Publish the final buffer
         self.sub_odom                 = rospy.Subscriber("/odom"                          , Odometry  , self.callback_odom)     # Subscribe to Odometry
         self.pub_odom                 = rospy.Publisher("/SLAM/buffer/odom_target"        , Odometry  , queue_size = 1)         # publish the mean value of the Odometry during the process
@@ -77,31 +101,34 @@ class Buffer():
         if len(arg.points) != 0: # if the sonar topics gives values
 
 
-            if rospy.get_time() < self.timer + 15: # while the length of the buffer is below 99 values
+            if rospy.get_time() < self.Timer + 15: # while the length of the buffer is below 99 values
 
 
+                print"dans la boucl"
+                print arg.points[0]
                 rot_q  = self.current_odom.pose.pose.orientation
 
                 orientation_list = [rot_q.x, rot_q.y, rot_q.z, rot_q.w]
                 (roll, pitch, yaw) = euler_from_quaternion(orientation_list)
 
 
-                point_array = np.array([arg.points[0].x, arg.points[0].y, 1])
 
-                T[0,2] = self.current_odom.pose.pose.position.x
-                T[1,2] = self.current_odom.pose.pose.position.y
+                point_array = np.array([[arg.points[0].x],
+                                        [arg.points[0].y],
+                                        [      1        ]])
 
-                T[0,0] =  np.cos(-yaw)
-                T[1,1] =  np.cos(-yaw)
-                T[1,0] = -np.sin(-yaw)
-                T[0,1] =  np.sin(-yaw)
+                rot_q                = self.current_odom.pose.pose.orientation
+                roll, pitch, theta   = euler_from_quaternion([rot_q.x, rot_q.y, rot_q.z, rot_q.w])
 
-                point_array = np.dot(T,point_array.T)
+                odom        = np.array([[self.current_odom.pose.pose.position.x],
+                                        [self.current_odom.pose.pose.position.y],
+                                        [               theta                  ]])
+
+                point_array = from_world2icp(odom,point_array)
 
                 point.x = point_array[0]
                 point.y = point_array[1]
                 point.z = -5
-
 
                 self.pointcloud_buffer.points.append(point)    # add the new point
                 self.pub_PC.publish(self.pointcloud_buffer)
@@ -212,6 +239,7 @@ if __name__ == '__main__':
             sub = rospy.Subscriber('/SLAM/buffer_2', Bool, callback)
             if initialization == False:
                 buffer.clear()
+                rospy.sleep(1)
                 print "\n   ############################## Buffer  Cleared ####################################\n"
 
 

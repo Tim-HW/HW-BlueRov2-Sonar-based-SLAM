@@ -12,17 +12,22 @@ import numpy as np
 
 def from_world2icp(odom,T):
 
-    point = np.zeros((3,1))
+    ##################################################################################
+    #   Function to change coordinate frame from world -> map
+    ##################################################################################
 
-    point[0,0] = T[0,0]
+    point = np.zeros((3,1)) # initialize the variable
+
+    point[0,0] = T[0,0]     # create the tmp vector
     point[1,0] = T[1,0]
     point[2,0] =   1
 
-
+    # matrix transform
     tmp = np.array([[ np.cos(-odom[2,0]) , np.sin(-odom[2,0]) , -odom[0,0] ],
                     [-np.sin(-odom[2,0]) , np.cos(-odom[2,0]) , -odom[0,0] ],
-                    [        0           ,          0         ,      1      ]])
+                    [        0           ,          0         ,      1     ]])
 
+    # transform the point
     point = np.dot(tmp,point)
 
 
@@ -39,43 +44,53 @@ class retrive_data():
 
     def __init__(self):
 
-        self.source_PC   = []
-        self.target_PC   = []
-        self.T_source    = np.zeros((3,1))
-        self.T_target    = np.zeros((3,1))
+        self.source_PC   = []                   # buffer: the homogeneous coordinates of the point from the map : [x,y,1]
+        self.target_PC   = []                   # buffer: the homogeneous coordinates of the point from the buffer : [x,y,1]
+        self.T_source    = np.zeros((3,1))      # buffer: origin of the map
+        self.T_target    = np.zeros((3,1))      # buffer: odometry of the buffer
 
-        self.sub_pc_source   = rospy.Subscriber('/SLAM/map'                     , PointCloud, self.callback_source)
-        self.sub_pc_target   = rospy.Subscriber('/SLAM/buffer/pointcloud_target', PointCloud, self.callback_target)
+        self.sub_pc_source   = rospy.Subscriber('/SLAM/map'                     , PointCloud, self.callback_source) # Subscribes to the map
+        self.sub_pc_target   = rospy.Subscriber('/SLAM/buffer/pointcloud_target', PointCloud, self.callback_target) # Subscribes to the buffer
 
-        self.sub_odom_source = rospy.Subscriber('/SLAM/buffer/odom_source'      , Odometry  , self.callback_odom_source)
-        self.sub_odom_target = rospy.Subscriber('/SLAM/buffer/odom_target'      , Odometry  , self.callback_odom_target)
+        self.sub_odom_source = rospy.Subscriber('/SLAM/buffer/odom_source'      , Odometry  , self.callback_odom_source) # Subscribes to the origin of the map
+        self.sub_odom_target = rospy.Subscriber('/SLAM/buffer/odom_target'      , Odometry  , self.callback_odom_target) # Subscribes to the odometry of the buffer
 
 
 
     def callback_source(self,var):
 
+        ##################################################################################
+        #   Function transform the PointCloud of the map into array format
+        ##################################################################################
 
-        if len(self.source_PC) != len(var.points):
+
+        if len(self.source_PC) != len(var.points): # while the value of the  pointcloud and the array are not equal
+
             x       = []
             y       = []
             ones    = []
 
 
-            for i in range(len(var.points)):
+            for i in range(len(var.points)): # for every points in the PointCloud
 
-                x.append(var.points[i].x)
-                y.append(var.points[i].y)
-                ones.append(1)
+                x.append(var.points[i].x)    # a new x coordinate is added to the x list
+                y.append(var.points[i].y)    # a new y coordinate is added to the y list
+                ones.append(1)               # a new 1 is added to the list
 
-            self.source_PC = np.vstack((x,y,ones)).T
+            self.source_PC = np.vstack((x,y,ones)).T # fuse all the lists into one matrix
 
 
 
 
     def callback_target(self,var):
 
+        ##################################################################################
+        #   Function transform the PointCloud of the map into array format
+        ##################################################################################
 
-        if len(self.target_PC) != len(var.points):
+
+        if len(self.target_PC) != len(var.points): # while the value of the  pointcloud and the array are not equal
+
             x       = []
             y       = []
             ones    = []
@@ -83,11 +98,11 @@ class retrive_data():
 
             for i in range(len(var.points)):
 
-                x.append(var.points[i].x)
-                y.append(var.points[i].y)
-                ones.append(1)
+                x.append(var.points[i].x) # a new x coordinate is added to the x list
+                y.append(var.points[i].y) # a new y coordinate is added to the y list
+                ones.append(1)            # a new 1 is added to the list
 
-            self.target_PC = np.vstack((x,y,ones)).T
+            self.target_PC = np.vstack((x,y,ones)).T  # fuse all the lists into one matrix
 
 
 
@@ -99,6 +114,10 @@ class retrive_data():
 
 
     def callback_odom_source(self,odom):
+
+        ##################################################################################
+        #   Function transform odometry message in a matrix [x,y,theta]
+        ##################################################################################
 
         roll  = 0
         pitch = 0
@@ -115,6 +134,11 @@ class retrive_data():
 
 
     def callback_odom_target(self,odom):
+
+        ##################################################################################
+        #   Function transform odometry message in a matrix [x,y,theta]
+        ##################################################################################
+
 
         roll = 0
         pitch = 0
@@ -135,9 +159,10 @@ class retrive_data():
 
     def initial_guess(self):
 
+        ##################################################################################
+        #   Function to compute the approximative transformation between the scan and the map
+        ##################################################################################
 
-        #print "t",self.T_target[2,0]
-        #print "s",self.T_source[2,0]
 
         T = np.eye(3)
 
@@ -145,23 +170,17 @@ class retrive_data():
 
 
 
-    	delta[0,0] = self.T_source[0,0] - self.T_target[0,0]
-    	delta[0,0] = self.T_source[1,0] - self.T_target[1,0]
+    	delta[0,0] = self.T_source[0,0] - self.T_target[0,0] # delta x
+    	delta[1,0] = self.T_source[1,0] - self.T_target[1,0] # delta y
 
-        """
-        T[0,0] =  np.cos(delta[2,0])
-        T[1,0] = -np.sin(delta[2,0])
-        T[0,1] =  np.sin(delta[2,0])
-        T[1,1] =  np.cos(delta[2,0])
-        """
 
-        from_world2icp(self.T_source,delta)
+        from_world2icp(self.T_source,delta) # transform into map frame reference
 
         T[0,2] = delta[0,0]
         T[1,2] = delta[1,0]
 
 
-    	return T
+    	return T # returns the transformation
 
 
 
@@ -169,16 +188,11 @@ class retrive_data():
 
     def return_source(self):
 
-        """
-        T = np.eye(3)
 
-        T[0,0] =  np.cos(-self.T_source[2,0])
-        T[1,1] =  np.cos(-self.T_source[2,0])
-        T[1,0] = -np.sin(-self.T_source[2,0])
-        T[0,1] =  np.sin(-self.T_source[2,0])
+        ##################################################################################
+        #   Function to return the the map and its origin
+        ##################################################################################
 
-        self.source_PC = np.dot(self.source_PC,T.T)
-        """
 
         return self.source_PC, self.T_source
 
@@ -190,23 +204,10 @@ class retrive_data():
     def return_target(self):
 
 
-        """
-        T = np.eye(3)
+        ##################################################################################
+        #   Function to return the the map and its origin
+        ##################################################################################
 
-
-        T[0,2] = -5
-        T[1,2] = -5
-
-        theta = 0
-        theta = theta*np.pi/180
-
-        T[0,0] =  np.cos(theta)
-        T[1,1] =  np.cos(theta)
-        T[1,0] = -np.sin(theta)
-        T[0,1] =  np.sin(theta)
-
-        self.target_PC = np.dot(self.target_PC,T.T)
-        """
 
         T = np.eye(3)
 

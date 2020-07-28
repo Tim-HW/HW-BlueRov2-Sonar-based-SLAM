@@ -66,46 +66,23 @@ class Mapping():
     def __init__(self):
 
 
-        self.map                      = PointCloud()
-        self.map.header.stamp.secs    = int(rospy.get_time())
-        self.map.header.stamp.nsecs   = 1000000000*(rospy.get_time()-int(rospy.get_time()))
-        self.map.header.frame_id      = "map"
+        self.map                      = PointCloud()                                          # buffer object
+        self.map.header.stamp.secs    = int(rospy.get_time())                                 # time seconds
+        self.map.header.stamp.nsecs   = 1000000000*(rospy.get_time()-int(rospy.get_time()))   # time in nano seconds
+        self.map.header.frame_id      = "map"                                                 # map as reference
 
-        self.timer                    = rospy.get_time()
-        self.final_odom               = Odometry()
-        self.sampled                  = False
-
-
-        self.sub_sonar                = rospy.Subscriber("/sonar/PC"              , PointCloud , self.callback)
-        self.sub_odom                 = rospy.Subscriber("/odom"                  , Odometry   , self.callback_odom)
-
-        self.pub_odom                 = rospy.Publisher("/SLAM/buffer/odom_source", Odometry   , queue_size = 1)
-        self.pub_map                  = rospy.Publisher("/SLAM/map"               , PointCloud , queue_size = 1)
+        self.timer                    = rospy.get_time()     # initialize timerer
+        self.final_odom               = Odometry()           # final buffer for odom
+        self.sampled                  = False                # variable to treat data once gathered one time only
 
 
+        self.sub_sonar                = rospy.Subscriber("/sonar/PC"              , PointCloud , self.callback)         # Subscribe to the dynamic sonar
+        self.sub_odom                 = rospy.Subscriber("/odom"                  , Odometry   , self.callback_odom)    # Subscribe to Odometry
+
+        self.pub_odom                 = rospy.Publisher("/SLAM/buffer/odom_source", Odometry   , queue_size = 1)        # publish the origin of the map
+        self.pub_map                  = rospy.Publisher("/SLAM/map"               , PointCloud , queue_size = 1)        # Publish the final map
 
 
-
-    def update(self,pointcloud,T):
-
-        point = np.zeros((3,1))
-
-
-        for i in range(len(pointcloud.points)):
-
-            if pointcloud.points[i].x != 0 and pointcloud.points[i].y != 0:
-
-                point[0,0] = pointcloud.points[i].x
-                point[1,0] = pointcloud.points[i].y
-                point[2,0] = 1
-
-                point = np.dot(T,point)
-
-                pointcloud.points[i].x = point[0,0]
-                pointcloud.points[i].y = point[1,0]
-                pointcloud.points[i].z = 0
-
-                self.map.points.append(pointcloud.points[i])
 
 
 
@@ -114,36 +91,46 @@ class Mapping():
 
     def change_origin(self,pointcloud,T):
 
+        ##################################################################################
+        #   Function add more points to the original map
+        ##################################################################################
+        # poincloud : the scan
+        # T         : the transform matrix
+        ##################################################################################
 
         tmp = Point32()
 
-        rotation = np.array([[  0   ],
+        rotation = np.array([[  0   ],      # create the rotation matrix
                              [  0   ],
                              [T[2,0]]])
 
-        translation = np.array([[ T[0,0] ],
+        translation = np.array([[ T[0,0] ], # create the translation matrix
                                 [ T[1,0] ],
                                 [   0    ]])
 
-        for i in range(len(pointcloud.points)):
+        for i in range(len(pointcloud.points)): # for every point in the scan
 
 
-            tmp_point = pointcloud.points[i]
-            
-            tmp_point = from_odom2world(tmp_point, rotation)
-            tmp_point = from_odom2world(tmp_point, translation)
+            tmp_point = pointcloud.points[i]    # tmp variable
+
+            tmp_point = from_odom2world(tmp_point, rotation)        # rotate the point in the map coordinate
+            tmp_point = from_odom2world(tmp_point, translation)     # translate the point in the map coordinate
 
 
-            self.map.points.append(tmp_point)
+            self.map.points.append(tmp_point)  # it to the map pointcloud
 
 
-        self.remove_duplicates(self.map)
+        self.remove_duplicates(self.map)       # once every point added : remove the duplicates
 
 
 
 
 
     def callback_odom(self,var):
+
+        ##################################################################################
+        #   Function set the origin of the map
+        ##################################################################################
 
 
         self.final_odom = var
@@ -160,6 +147,10 @@ class Mapping():
 
     def callback(self,arg):
 
+        ##################################################################################
+        #   Function retrive and add the sonar points in the map
+        ##################################################################################
+
         point = Point32()
         """
         This callback is made to retrive data from the PointCloud
@@ -169,74 +160,30 @@ class Mapping():
         if len(arg.points) != 0: # if the sonar topics gives values
 
 
-            if rospy.get_time() < self.timer + 15: # while the length of the buffer is below 99 values
+            if rospy.get_time() < self.timer + 15:  # during 15 second
 
-
-                rot_q  = self.final_odom.pose.pose.orientation
-
-                orientation_list = [rot_q.x, rot_q.y, rot_q.z, rot_q.w]
-                (roll, pitch, yaw) = euler_from_quaternion(orientation_list)
-
-                """
-
-                point_array = np.array([arg.points[0].x, arg.points[0].y, 1])
-
-                T = np.eye(3)
-
-                T[0,2] = self.final_odom.pose.pose.position.x
-                T[1,2] = self.final_odom.pose.pose.position.y
-
-                T[0,0] =  np.cos(-yaw)
-                T[1,1] =  np.cos(-yaw)
-                T[1,0] = -np.sin(-yaw)
-                T[0,1] =  np.sin(-yaw)
-
-                point_array = np.dot(T,point_array.T)
-
-                point.x = point_array[0]
-                point.y = point_array[1]
-                point.z = -5
-
-                """
 
                 self.map.points.append(arg.points[0])    # add the new point
                 #self.pub_map.publish(self.map)
-                self.pub_odom.publish(self.final_odom)
+                self.pub_odom.publish(self.final_odom)   # publishes the origin of the map
 
 
-            else:   # if the buffer is full
-
+            else:    # if timer is over then
 
 
                 if self.sampled == False:
 
 
-                    self.remove_duplicates(self.map)
-                    #self.sampling(self.map)
+                    self.remove_duplicates(self.map) # removes duplcated points
+                    #self.sampling(self.map)         # sample the number of points
 
-
-
-                    """
-                    pt = Point32()
-                    pt.x = 1
-                    pt.y = 0
-                    pt.z = 0
-
-                    self.map.points.append(pt)
-
-                    pt.x = 0
-                    pt.y = 1
-
-                    self.map.points.append(pt)
-                    """
-
-                    self.pub_map.publish(self.map)
-                    self.pub_odom.publish(self.final_odom)
+                    self.pub_map.publish(self.map)          # Publishes the pointcloud mzp
+                    self.pub_odom.publish(self.final_odom)  # Publishes the final origin of the map
 
                     self.sampled = True
 
-            self.pub_map.publish(self.map)
-            self.pub_odom.publish(self.final_odom)
+        self.pub_map.publish(self.map)
+        self.pub_odom.publish(self.final_odom)
 
 
 
@@ -352,8 +299,8 @@ if __name__ == '__main__':
 
     rospy.init_node('Mapping', anonymous=True)
 
-    sub1 = rospy.Subscriber('/SLAM/buffer/pointcloud_target', PointCloud, callback_pc)
-    sub2 = rospy.Subscriber('/SLAM/T'                       , my_msg    , callback_T)
+    sub1 = rospy.Subscriber('/SLAM/buffer/pointcloud_target', PointCloud, callback_pc)  # Subscribes to the scan buffer
+    sub2 = rospy.Subscriber('/SLAM/T'                       , my_msg    , callback_T)   # Subscribes to the transform computed by the ICP
 
 
 
@@ -365,24 +312,24 @@ if __name__ == '__main__':
     while not rospy.is_shutdown():
 
 
-        if state == False:
+        if state == False: # if the main didn't call the node
 
-            sub3 = rospy.Subscriber('/SLAM/buffer_1', Bool, callback)
+            sub3 = rospy.Subscriber('/SLAM/buffer_1', Bool, callback)  # refresh the old value
 
-            if initialization == False:
+            if initialization == False: # if the initialization has been done
 
-                if update == False:
+                if update == False: # if the map has not been updated before
 
-                    map.change_origin(target_PC,T)
+                    map.change_origin(target_PC,T) # the new scan to the existing map with the transform
                     print "\n   ############################### Map Updated #######################################\n"
                     update = True
 
 
-        elif state == True:
+        elif state == True:  # if the main called the node to fire
 
-            update = False
+            update = False   # clear the update value
 
-            if initialization == True:
-                map = Mapping()
+            if initialization == True:  # it's the first time
+                map = Mapping() # create the mapping object
                 print "\n   ############################### Map Created #######################################\n"
                 initialization = False

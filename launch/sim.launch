@@ -54,7 +54,7 @@
     <node pkg="sonar_mapping" type="map_tf.py"           name="tf_broadcaster_map" output="screen"/>
     <node pkg="sonar_mapping" type="odom_tf.py"          name="tf_broadcaster"     output="screen"/>
     <node pkg="sonar_mapping" type="mapping.py"          name="Mapping"            output="screen"/>
-    <node pkg="sonar_mapping" type="static_buffer.py"    name="Static_Buffer"      output="screen"/>
+    <node pkg="sonar_mapping" type="dynamic_buffer.py"   name="Dynamic_Buffer"     output="screen"/>
     <node pkg="sonar_mapping" type="reccord_position.py" name="Reccord"            output="screen"/>
     <node pkg="sonar_mapping" type="main.py"             name="Static_SLAM"        output="screen"/>
 

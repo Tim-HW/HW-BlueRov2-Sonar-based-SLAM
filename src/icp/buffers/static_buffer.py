@@ -19,20 +19,20 @@ class Buffer():
 
     def __init__(self):
 
-        self.pointcloud_buffer                      = PointCloud()
-        self.pointcloud_buffer.header.stamp.secs    = int(rospy.get_time())
-        self.pointcloud_buffer.header.stamp.nsecs   = 1000000000*(rospy.get_time()-int(rospy.get_time()))
-        self.pointcloud_buffer.header.frame_id      = "map"
+        self.pointcloud_buffer                      = PointCloud()                                          # buffer object
+        self.pointcloud_buffer.header.stamp.secs    = int(rospy.get_time())                                 # time seconds
+        self.pointcloud_buffer.header.stamp.nsecs   = 1000000000*(rospy.get_time()-int(rospy.get_time()))   # time in nano seconds
+        self.pointcloud_buffer.header.frame_id      = "map"                                                 # map as reference
 
-        self.Timer                    = rospy.get_time()    # initialize timerer
-        self.current_odom             = Odometry()          # temporary buffer for odom
-        self.final_odom               = Odometry()          # final buffer for odom
-        self.sampled                  = False               # variable to treat data once gathered one time only
+        self.Timer                    = rospy.get_time()     # initialize timerer
+        self.current_odom             = Odometry()           # temporary buffer for odom
+        self.final_odom               = Odometry()           # final buffer for odom
+        self.sampled                  = False                # variable to treat data once gathered one time only
         self.x                        = []                   # buffer of x position
         self.y                        = []                   # buffer of y position
         self.theta                    = []                   # buffer of theta/yaw position
 
-        self.sub_PC                   = rospy.Subscriber("/sonar/PC", PointCloud, self.callback)          # Subscribe to the dynamic sonar
+        self.sub_PC                   = rospy.Subscriber("/sonar/PC", PointCloud, self.callback)                                # Subscribe to the dynamic sonar
         self.pub_PC                   = rospy.Publisher("/SLAM/buffer/pointcloud_target"  , PointCloud, queue_size = 1)         # Publish the final buffer
         self.sub_odom                 = rospy.Subscriber("/odom"                          , Odometry  , self.callback_odom)     # Subscribe to Odometry
         self.pub_odom                 = rospy.Publisher("/SLAM/buffer/odom_target"        , Odometry  , queue_size = 1)         # publish the mean value of the Odometry during the process
@@ -69,7 +69,7 @@ class Buffer():
     def callback(self,arg):
 
         ##################################################################################
-        #   Function retrive the current Odometry
+        #   Function retrive and add the sonar points in the buffer
         ##################################################################################
 
         if len(arg.points) != 0: # if the sonar topics is not empty
@@ -77,28 +77,28 @@ class Buffer():
 
             if rospy.get_time() < self.Timer + 12 :   # during 15 second
 
-                self.pointcloud_buffer.points.append(arg.points[0])           # the buffer will gather new points
+                self.pointcloud_buffer.points.append(arg.points[0])           # the buffer will gather new points from the sonar
 
                 rot_q  = self.current_odom.pose.pose.orientation              # transform quaternion to euler angle
 
                 orientation_list = [rot_q.x, rot_q.y, rot_q.z, rot_q.w]
                 (roll, pitch, theta) = euler_from_quaternion(orientation_list)
 
-                self.x.append(self.current_odom.pose.pose.position.x)        # add the current x position to the mean variable of x
-                self.y.append(self.current_odom.pose.pose.position.y)         # add the current y position to the mean variable of y
-                self.theta.append(theta)                                          # add the current theta position to the mean variable of theta
+                self.x.append(self.current_odom.pose.pose.position.x)             # add the current x position in a list
+                self.y.append(self.current_odom.pose.pose.position.y)             # add the current y position in a list
+                self.theta.append(theta)                                          # add the current theta position in a list
 
-                self.final_odom = self.current_odom
+                self.final_odom = self.current_odom                               # current Odometry = final_odom
 
                 self.pub_PC.publish(self.pointcloud_buffer)                   # publish the current state of the buffer (useful for debugging)
-                self.pub_odom.publish(self.final_odom)
+                self.pub_odom.publish(self.final_odom)                        # publish the current state of the Odometry (useful for debugging)
 
 
             else:   # if timer is over then
 
 
 
-                if self.sampled == False:
+                if self.sampled == False:   # if the sampling has not been called
 
 
                     try:
@@ -227,24 +227,26 @@ if __name__ == '__main__':
 
 
 
-    rospy.init_node('Static_Buffer', anonymous=True)
+    rospy.init_node('Static_Buffer', anonymous=True) # create the node
 
-    initialization = True
+    initialization = True                            # initialization
 
     while not rospy.is_shutdown():
 
 
-        if state == False:
-            sub = rospy.Subscriber('/SLAM/buffer_2', Bool, callback)
-            if initialization == False:
-                buffer.clear()
-                rospy.sleep(1)
+        if state == False: # if the main didn't call the node
+            sub = rospy.Subscriber('/SLAM/buffer_2', Bool, callback) # refresh the old value
+
+            if initialization == False: # if the initialization has been done
+                buffer.clear()  # clear the cache
+                rospy.sleep(1)  # wait 1s
 
 
 
-        elif state == True:
-            if initialization == True:
+        elif state == True: # if the main called the node to fire
 
-                buffer = Buffer()
+            if initialization == True: # it's the first time
+
+                buffer = Buffer()   # create the buffer
                 print "\n   ############################## Buffer  Created ####################################\n"
-                initialization = False
+                initialization = False  # initialization done

@@ -186,22 +186,23 @@ def from_icp2world(odom,point):
 
 
 
+
+
 def from_world2icp(odom,T):
 
     point = np.zeros((3,1))
 
-    point[0,0] = T[0,0]
-    point[1,0] = T[1,0]
+    point[0,0] = T[0,0]-odom[0,0]
+    point[1,0] = T[1,0]-odom[1,0]
     point[2,0] =   1
 
 
-    tmp = np.array([[ np.cos(-odom[2,0]) , np.sin(-odom[2,0]) ,  0 ],
-                    [-np.sin(-odom[2,0]) , np.cos(-odom[2,0]) ,  0 ],
+
+    tmp = np.array([[ np.cos(odom[2,0]) , np.sin(odom[2,0]) ,  0 ],
+                    [-np.sin(odom[2,0]) , np.cos(odom[2,0]) ,  0 ],
                     [        0           ,          0         ,  1 ],])
 
     point = np.dot(tmp,point)
-
-    point[2,0] = np.arccos(tmp[0,0])
 
 
     return point
@@ -275,7 +276,7 @@ if __name__ == '__main__':
     print "   ###################################################################################"
     print " "
 
-    raw_input("\n            Would you like to initialize the map here ? [ENTER]")
+    #raw_input("\n            Would you like to initialize the map here ? [ENTER]")
 
     source,odom_source = call_buffer_1() # ask the buffer 1 to scan
 
