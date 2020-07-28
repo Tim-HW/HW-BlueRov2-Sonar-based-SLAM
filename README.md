@@ -91,31 +91,33 @@ $ cd ..
 $ cd uuv_sensor_plugins/uuv_sensor_ros_plugins/urdf
 $ sudo gedit sonar_snippets.xacro
 ```
-and change the forward_multibeam_p900 with those new values.
+and and the following sonar description :
 ```xml
-<xacro:macro name="forward_multibeam_p900" params="namespace parent_link *origin">
-    <xacro:multibeam_sonar
-      namespace="${namespace}"
-      suffix=""
-      parent_link="${parent_link}"
-      topic="sonar"
-      mass="0.02"
-      update_rate="15"
-      samples="200"
-      fov="6.0"
-      range_min="0.3"
-      range_max="75"
-      range_stddev="0.027"
-      mesh="">
-      <inertia ixx="0.00001" ixy="0.0" ixz="0.0" iyy="0.00001" iyz="0.0" izz="0.00001" />
-      <xacro:insert_block name="origin" />
-      <visual>
-        <geometry>
-          <mesh filename="file://$(find uuv_sensor_ros_plugins)/meshes/p900.dae" scale="1 1 1"/>
-        </geometry>
-      </visual>
-    </xacro:multibeam_sonar>
-  </xacro:macro>
+  <xacro:macro name="micron_sonar" params="namespace parent_link *origin">
+      <xacro:multibeam_sonar
+        namespace="${namespace}"
+        suffix=""
+        parent_link="${parent_link}"
+        topic="sonar"
+        mass="0.02"
+        update_rate="15"
+        samples="396"
+        fov="6.3"
+        range_min="0.3"
+        range_max="75"
+        range_stddev="0.027"
+        mesh="">
+        <inertia ixx="0.00001" ixy="0.0" ixz="0.0" iyy="0.00001" iyz="0.0" izz="0.00001" />
+        <xacro:insert_block name="origin" />
+        <visual>
+          <geometry>
+            <mesh filename="file://$(find uuv_sensor_ros_plugins)/meshes/p900.dae" scale="1 1 1"/>
+          </geometry>
+        </visual>
+      </xacro:multibeam_sonar>
+    </xacro:macro>
+
+
 ```
 ![sonar2](https://github.com/Bluerov2/MASTER/blob/sonar_mapping/images/9e9dd76fd4f547150d948ba49b7f92b3_74108.jpeg)
 
@@ -150,12 +152,8 @@ $ roslaunch sonar_mapping bag.launch
 
 ## List of Task
 
-- [x] UUV simulation senario
-
-Static SLAM:
-
 - [x] IMU & DLV fused (/odom)
 - [x] Scan-matching using ICP
-- [ ] Kalman Filter (Localisation)
-- [ ] Mapping
+- [x] Kalman Filter (Localisation)
+- [x] Mapping
 
