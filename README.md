@@ -12,7 +12,10 @@ The aim of this project is to provide a start of a 2D SLAM for underwater ROV. T
  <img src="https://github.com/Bluerov2/MASTER/blob/sonar_mapping/images/BlueROV2-4-lumen-1-300x300.png " width="400" >
 </p>
 
-
+## Video prentation
+<p align="center">
+<img src="https://github.com/Bluerov2/MASTER/blob/sonar_mapping/images/hh.jpg " width="400" >
+</p>
 
 ## Related Packages
 
