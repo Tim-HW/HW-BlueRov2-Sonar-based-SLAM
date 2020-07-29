@@ -14,7 +14,7 @@ The aim of this project is to provide a start of a 2D SLAM for underwater ROV. T
 
 ## Video prentation
 <p align="center">
-<a href="(https://www.youtube.com/watch?v=X4j5ylzuf_o&feature=youtu.be)"
+<a href="https://www.youtube.com/watch?v=X4j5ylzuf_o&feature=youtu.be
 " target="_blank"><img src="https://github.com/Tim-HW/Tim-HW-BlueRov2_Sonar_based_SLAM-/blob/master/images/video.png" /></a>
 </p>
 
