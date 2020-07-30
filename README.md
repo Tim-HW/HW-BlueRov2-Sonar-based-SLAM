@@ -21,6 +21,8 @@ The aim of this project is to provide a start of a 2D SLAM for underwater ROV. T
 
 ## Related Packages
 
+Required: Ubuntu 16.04 with ROS Kinetic (http://wiki.ros.org/kinetic). Also, the following packages are required:
+
 * UUV-simulator:
 
   https://github.com/uuvsimulator/uuv_simulator
