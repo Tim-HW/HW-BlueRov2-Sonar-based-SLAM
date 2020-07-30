@@ -158,3 +158,5 @@ $ roslaunch sonar_mapping bag.launch
 - [x] Kalman Filter (Localisation)
 - [x] Mapping
 
+## Thesis
+
