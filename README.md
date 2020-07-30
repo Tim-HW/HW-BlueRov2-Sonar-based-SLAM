@@ -9,6 +9,8 @@ Recent approaches to robot localisation in complex environments have been data i
 
 The aim of this thesis is to implement a robust sonar-based SLAM algorithm for underwater ROV and AUV. The entire implementation will be done using ROS framework with UUV simulation as environment. The model is simulated using Deskitek Saga but you can use your own model as well. We modified the sonar to be se same as the [Micron Sonar](https://www.tritech.co.uk/product/small-rov-mechanical-sector-scanning-sonar-tritech-micron) from Tritech. The sonar based SLAM is acheived using an ICP coupled with a Kalman Filter. The purpose was to implemente a robust sonar-based SLAM using only the simulator.
 
+(more infromation available at the end of this page)
+
 <p align="center">
  <img src="https://github.com/Bluerov2/MASTER/blob/sonar_mapping/images/BlueROV2-4-lumen-1-300x300.png " width="400" >
 </p>
@@ -160,3 +162,4 @@ $ roslaunch sonar_mapping bag.launch
 
 ## Thesis
 
+(upload soon)
