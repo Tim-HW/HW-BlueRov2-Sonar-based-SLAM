@@ -160,6 +160,7 @@ $ roslaunch sonar_mapping bag.launch
 - [x] Scan-matching using ICP
 - [x] Kalman Filter (Localisation)
 - [x] Mapping
+- [x] SLAM
 
 ## Thesis
 
