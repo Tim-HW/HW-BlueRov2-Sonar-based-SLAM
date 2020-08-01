@@ -16,7 +16,7 @@ The entire implementation will be done using [ROS kinetic](http://wiki.ros.org/k
  <img src="https://github.com/Bluerov2/MASTER/blob/sonar_mapping/images/BlueROV2-4-lumen-1-300x300.png " width="400" >
 </p>
 
-## Video prentation
+## Video presentation
 <p align="center">
 <a href="https://www.youtube.com/watch?v=qZnpLRyUY9A&feature=youtu.be
 " target="_blank"><img src="https://github.com/Tim-HW/Tim-HW-BlueRov2_Sonar_based_SLAM-/blob/master/images/video.png" /></a>
