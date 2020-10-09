@@ -1,6 +1,5 @@
 # BlueRov2 SLAM
 
-                                                ! WORK IN PROGRESSE !
 
 
 <p align="center">
