@@ -166,4 +166,4 @@ $ roslaunch sonar_mapping bag.launch
 
 ## Thesis
 
-(upload soon)
+https://github.com/Tim-HW/Tim-HW-BlueRov2_Sonar_based_SLAM-/blob/master/Heriot_Watt_University__HWU__CS_Masters_thesis_Sonar_based_SLAM_for_underwater_ROV.pdf
