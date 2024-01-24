@@ -1,6 +1,6 @@
 # BlueRov2 SLAM
 
-## deprecated
+*deprecated*
 
 
 
